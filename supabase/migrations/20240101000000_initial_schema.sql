@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS public.devices (
 CREATE TABLE IF NOT EXISTS public.profiles (
   id         UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email      TEXT NOT NULL,
-  is_admin   BOOLEAN NOT NULL DEFAULT false,
+  role       TEXT NOT NULL DEFAULT 'viewer' CHECK (role IN ('viewer', 'editor', 'admin')),
   created_at TIMESTAMPTZ DEFAULT timezone('utc', now())
 );
 
@@ -62,7 +62,7 @@ SECURITY DEFINER
 STABLE
 AS $$
   SELECT COALESCE(
-    (SELECT is_admin FROM public.profiles WHERE id = auth.uid()),
+    (SELECT role = 'admin' FROM public.profiles WHERE id = auth.uid()),
     false
   );
 $$;
@@ -137,8 +137,8 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, is_admin)
-  VALUES (NEW.id, NEW.email, false)
+  INSERT INTO public.profiles (id, email, role)
+  VALUES (NEW.id, NEW.email, 'viewer')
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;

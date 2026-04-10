@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 export interface Profile {
   id: string;
   email: string;
-  is_admin: boolean;
-  created_at: string;
+  role: string | null;
+  created_at: string | null;
 }
 
 export interface UserDevice {
@@ -94,6 +94,27 @@ export function useUnassignDevice() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ["devices"] });
+    },
+  });
+}
+
+/**
+ * Admin hook: Update a user's role
+ */
+export function useUpdateUserRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: 'viewer' | 'editor' }) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ role })
+        .eq("id", userId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY });
     },
   });
 }

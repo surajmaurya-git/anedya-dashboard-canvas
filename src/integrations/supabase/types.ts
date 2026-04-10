@@ -16,34 +16,34 @@ export type Database = {
     Tables: {
       dashboard_templates: {
         Row: {
-          created_at: string
+          created_at: string | null
           description: string | null
           id: string
           name: string
           schema: Json
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           description?: string | null
           id?: string
           name: string
           schema?: Json
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           description?: string | null
           id?: string
           name?: string
           schema?: Json
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
       devices: {
         Row: {
-          created_at: string
+          created_at: string | null
           id: string
           node_id: string
           path: string
@@ -51,7 +51,7 @@ export type Database = {
           title: string
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           id?: string
           node_id: string
           path: string
@@ -59,7 +59,7 @@ export type Database = {
           title: string
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           id?: string
           node_id?: string
           path?: string
@@ -73,45 +73,48 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "dashboard_templates"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       profiles: {
         Row: {
-          created_at: string
+          created_at: string | null
           email: string
           id: string
           is_admin: boolean
+          role: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           email: string
           id: string
           is_admin?: boolean
+          role?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           email?: string
           id?: string
           is_admin?: boolean
+          role?: string | null
         }
         Relationships: []
       }
       user_devices: {
         Row: {
-          assigned_at: string
+          assigned_at: string | null
           device_id: string
           id: string
           user_id: string
         }
         Insert: {
-          assigned_at?: string
+          assigned_at?: string | null
           device_id: string
           id?: string
           user_id: string
         }
         Update: {
-          assigned_at?: string
+          assigned_at?: string | null
           device_id?: string
           id?: string
           user_id?: string
@@ -131,24 +134,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_all_profiles: {
-        Args: never
-        Returns: {
-          created_at: string
-          email: string
-          id: string
-          is_admin: boolean
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "profiles"
-          isOneToOne: false
-          isSetofReturn: true
-        }
-      }
-      is_admin:
-        | { Args: never; Returns: boolean }
-        | { Args: { check_user_id: string }; Returns: boolean }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
@@ -281,4 +267,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

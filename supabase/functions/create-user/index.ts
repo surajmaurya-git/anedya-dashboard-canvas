@@ -45,18 +45,25 @@ Deno.serve(async (req: Request) => {
 
     const { data: profile, error: profileError } = await adminClient
       .from('profiles')
-      .select('is_admin')
+      .select('role')
       .eq('id', callingUser.id)
       .single();
 
-    if (profileError || !profile?.is_admin) {
+    if (profileError || profile?.role !== 'admin') {
       return new Response(
         JSON.stringify({ error: 'Forbidden: admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { email, password, is_admin = false } = await req.json();
+    const { email, password, role = 'viewer' } = await req.json();
+
+    if (role === 'admin') {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: Admins cannot create other admins' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (!email || !password) {
       return new Response(
@@ -85,10 +92,10 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (is_admin && newUser.user) {
+    if (newUser.user) {
       await adminClient
         .from('profiles')
-        .update({ is_admin: true })
+        .update({ role })
         .eq('id', newUser.user.id);
     }
 

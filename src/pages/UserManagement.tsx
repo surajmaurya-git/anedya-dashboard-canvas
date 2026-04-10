@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, UserPlus, Shield, Smartphone, Trash2, Loader2, Eye, EyeOff } from "lucide-react";
-import { useUsers, useDeleteUser, useAssignDevice, useUnassignDevice } from "@/hooks/useUsers";
+import { useUsers, useDeleteUser, useAssignDevice, useUnassignDevice, useUpdateUserRole } from "@/hooks/useUsers";
 import { useDevices } from "@/hooks/useDevices";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,9 +25,11 @@ const UserManagement = () => {
   // New User Form State
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [role, setRole] = useState<'viewer' | 'editor'>('viewer');
   const [showPassword, setShowPassword] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+
+  const updateUserRole = useUpdateUserRole();
 
   // Use the Edge Function to create users (bypasses default signup limits)
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -36,7 +39,7 @@ const UserManagement = () => {
     setIsCreating(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-user", {
-        body: { email, password, is_admin: isAdmin },
+        body: { email, password, role },
       });
 
       if (error) throw error;
@@ -45,7 +48,7 @@ const UserManagement = () => {
       toast.success("User created successfully!");
       setEmail("");
       setPassword("");
-      setIsAdmin(false);
+      setRole("viewer");
 
       // Properly reflect the new user in UI without reloading the whole browser
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -143,18 +146,20 @@ const UserManagement = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2 pt-2 border-t mt-4">
-                  <Checkbox 
-                    id="is_admin" 
-                    checked={isAdmin} 
-                    onCheckedChange={(c) => setIsAdmin(c as boolean)} 
-                  />
-                  <Label htmlFor="is_admin" className="font-medium flex items-center gap-1 cursor-pointer">
-                    <Shield className="h-3 w-3 text-primary" /> Admin User
-                  </Label>
+                <div className="space-y-2 pt-2 border-t mt-4">
+                  <Label htmlFor="role" className="font-medium">User Role</Label>
+                  <Select value={role} onValueChange={(val: 'viewer' | 'editor') => setRole(val)}>
+                    <SelectTrigger id="role">
+                      <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="viewer">Viewer (Read-only)</SelectItem>
+                      <SelectItem value="editor">Editor (Can edit devices)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <p className="text-xs text-muted-foreground ml-6">
-                  Admins have full access to all devices and this management panel.
+                <p className="text-xs text-muted-foreground mt-2">
+                  Admins cannot create new Admin users.
                 </p>
 
                 <Button type="submit" className="w-full mt-4" disabled={isCreating}>
@@ -193,14 +198,24 @@ const UserManagement = () => {
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="font-medium text-lg">{user.email}</h3>
-                            {user.is_admin ? (
+                            {user.role === 'admin' ? (
                               <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">
                                 Admin
                               </span>
                             ) : (
-                              <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground ring-1 ring-inset ring-secondary-foreground/10">
-                                User
-                              </span>
+                              <Select 
+                                value={user.role || 'viewer'} 
+                                onValueChange={(val: 'viewer' | 'editor') => updateUserRole.mutate({ userId: user.id, role: val })}
+                                disabled={updateUserRole.isPending}
+                              >
+                                <SelectTrigger className="w-28 h-7 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="viewer">Viewer</SelectItem>
+                                  <SelectItem value="editor">Editor</SelectItem>
+                                </SelectContent>
+                              </Select>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">ID: {user.id}</p>
@@ -216,7 +231,7 @@ const UserManagement = () => {
                       </div>
 
                       {/* Device Assignments */}
-                      {!user.is_admin && (
+                      {user.role !== 'admin' && (
                         <div className="mt-4 pt-4 border-t">
                           <Label className="text-sm font-semibold mb-3 block flex items-center gap-2">
                             <Smartphone className="h-4 w-4" /> Assigned Devices
@@ -254,7 +269,7 @@ const UserManagement = () => {
                           )}
                         </div>
                       )}
-                      {user.is_admin && (
+                      {user.role === 'admin' && (
                          <div className="mt-2 text-sm text-primary/80 bg-primary/5 p-2 rounded">
                            Admins automatically have access to all devices.
                          </div>

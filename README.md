@@ -1,6 +1,5 @@
 [<img alt="Anedya Documentation" src="https://img.shields.io/badge/Anedya-Documentation-blue?style=for-the-badge">](https://docs.anedya.io?utm_source=github&utm_medium=link&utm_campaign=github-sdk&utm_content=react)
 
-
 <!---<div style="width:20%; margin:0 auto;margin-bottom:50px;margin-top:50px;">-->
 <p align="center">
     <img src="https://cdn.anedya.io/anedya_black_banner.png" alt="Logo">
@@ -94,15 +93,15 @@ Vercel will ask for:
 
 ### Quick Reference: Values You Need
 
-| Where used | Name | Source |
-| --- | --- | --- |
-| GitHub Actions Secret | `SUPABASE_ACCESS_TOKEN` | Supabase Account Settings → Access Tokens |
-| GitHub Actions Secret | `SUPABASE_PROJECT_ID` | Supabase project reference ID |
-| GitHub Actions Secret | `SUPABASE_DB_PASSWORD` | Supabase project database password |
-| Vercel Environment Variable | `VITE_SUPABASE_PROJECT_URL` | Supabase Project Settings → API |
-| Vercel Environment Variable | `VITE_SUPABASE_ANON_KEY` | Supabase Project Settings → API |
-| Vercel Environment Variable | `VITE_ANEDYA_API_KEY` | Anedya project API key |
-| Vercel Environment Variable (optional) | `VITE_APP_NAME` | Any app display name you choose |
+| Where used                             | Name                        | Source                                    |
+| -------------------------------------- | --------------------------- | ----------------------------------------- |
+| GitHub Actions Secret                  | `SUPABASE_ACCESS_TOKEN`     | Supabase Account Settings → Access Tokens |
+| GitHub Actions Secret                  | `SUPABASE_PROJECT_ID`       | Supabase project reference ID             |
+| GitHub Actions Secret                  | `SUPABASE_DB_PASSWORD`      | Supabase project database password        |
+| Vercel Environment Variable            | `VITE_SUPABASE_PROJECT_URL` | Supabase Project Settings → API           |
+| Vercel Environment Variable            | `VITE_SUPABASE_ANON_KEY`    | Supabase Project Settings → API           |
+| Vercel Environment Variable            | `VITE_ANEDYA_API_KEY`       | Anedya project API key                    |
+| Vercel Environment Variable (optional) | `VITE_APP_NAME`             | Any app display name you choose           |
 
 ---
 

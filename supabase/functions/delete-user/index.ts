@@ -45,11 +45,11 @@ Deno.serve(async (req: Request) => {
 
     const { data: profile, error: profileError } = await adminClient
       .from('profiles')
-      .select('is_admin')
+      .select('role')
       .eq('id', callingUser.id)
       .single();
 
-    if (profileError || !profile?.is_admin) {
+    if (profileError || profile?.role !== 'admin') {
       return new Response(
         JSON.stringify({ error: 'Forbidden: admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -7,6 +7,7 @@ import { Settings, Clock, CalendarPlus, Pencil, Loader2 } from 'lucide-react';
 import { WidgetConfig } from '@/store/useBuilderStore';
 import { useValueStoreData } from '@/hooks/useValueStoreData';
 import { useWidgetData } from '@/hooks/useWidgetData';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ValueStoreWidgetProps {
   config: WidgetConfig;
@@ -25,6 +26,7 @@ interface ValueStoreWidgetProps {
  *   - "variable": read-only via latest Data API (Set button disabled)
  */
 export function ValueStoreWidget({ config, nodeId, pollIntervalMs, isEditMode }: ValueStoreWidgetProps) {
+  const { role } = useAuth();
   const vsKey = config.config.deviceKey || '';
   const dataSource = config.config.dataSource || 'valuestore';
 
@@ -45,7 +47,7 @@ export function ValueStoreWidget({ config, nodeId, pollIntervalMs, isEditMode }:
   // Pick the active data
   const isLoading = dataSource === 'valuestore' ? vs.isLoading : vr.isLoading;
   const activeValue = dataSource === 'valuestore' ? vs.value : vr.value;
-  const canWrite = dataSource === 'valuestore'; // Only ValueStore supports writing
+  const canWrite = dataSource === 'valuestore' && role !== 'viewer'; // Only ValueStore supports writing, and viewers cannot write
 
   const [inputValue, setInputValue] = useState('');
   const unit = config.config.unit || '';
@@ -136,7 +138,7 @@ export function ValueStoreWidget({ config, nodeId, pollIntervalMs, isEditMode }:
                 className="h-9 px-4"
                 onClick={handleSet}
                 disabled={vs.isSetting || !canWrite}
-                title={!canWrite ? 'Set is only available with ValueStore source' : ''}
+                title={!canWrite ? (dataSource !== 'valuestore' ? 'Set is only available with ValueStore source' : 'Viewers cannot set values') : ''}
               >
                 {vs.isSetting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

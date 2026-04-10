@@ -75,7 +75,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                 {user?.username?.charAt(0).toUpperCase() || 'A'}
               </AvatarFallback>
             </Avatar>
-            <span className="hidden md:block text-sm font-medium">{user?.username || 'Admin'}</span>
+            <span className="hidden md:block text-sm font-medium">{user?.username || 'Profile'}</span>
           </div>
         </div>
       </div>

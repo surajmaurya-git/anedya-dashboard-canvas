@@ -64,7 +64,7 @@ const AppRoutes = () => {
                 <div className="text-center max-w-md">
                   <h2 className="text-3xl font-bold mb-4">Welcome back</h2>
                   <p className="text-muted-foreground mb-8">
-                    Select a device from the sidebar to view its dashboard, or manage your account settings.
+                    Select a device from the sidebar to view its dashboard.
                   </p>
                   
                   <div className="grid grid-cols-1 gap-4">

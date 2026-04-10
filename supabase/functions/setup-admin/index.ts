@@ -28,7 +28,7 @@ Deno.serve(async (req: Request) => {
     const { data: existingAdmins } = await adminClient
       .from('profiles')
       .select('id')
-      .eq('is_admin', true)
+      .eq('role', 'admin')
       .limit(1);
 
     const needsSetup = !existingAdmins || existingAdmins.length === 0;
@@ -78,10 +78,17 @@ Deno.serve(async (req: Request) => {
     }
 
     if (newUser.user) {
-      await adminClient
+      const { error: updateError } = await adminClient
         .from('profiles')
-        .update({ is_admin: true })
+        .update({ role: 'admin' })
         .eq('id', newUser.user.id);
+        
+      if (updateError) {
+        return new Response(
+          JSON.stringify({ error: `Update profile failed. Did you run the SQL migration script? Detailed error: ${updateError.message}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     return new Response(

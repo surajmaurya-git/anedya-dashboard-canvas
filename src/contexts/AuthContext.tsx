@@ -9,6 +9,7 @@ interface AuthContextType {
   session: Session | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  role: 'viewer' | 'editor' | 'admin';
   isLoading: boolean;
   logout: () => Promise<void>;
 }
@@ -19,6 +20,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [role, setRole] = useState<'viewer' | 'editor' | 'admin'>('viewer');
   const [isLoading, setIsLoading] = useState(true);
   const adminFetchVersionRef = useRef(0);
 
@@ -43,23 +45,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             try {
               const { data, error } = await supabase
                 .from("profiles")
-                .select("is_admin")
+                .select("role")
                 .eq("id", userId)
                 .single();
 
               if (version !== adminFetchVersionRef.current) return;
               if (error && error.code !== "PGRST116") {
-                console.warn("Error fetching admin status:", error.message);
+                console.warn("Error fetching profile status:", error.message);
               }
-              setIsAdmin(!!data?.is_admin);
+              const currentRole = data?.role as any || 'viewer';
+              setIsAdmin(currentRole === 'admin');
+              setRole(currentRole);
             } catch (err) {
               if (version !== adminFetchVersionRef.current) return;
               console.warn("fetchAdminStatus failed:", err);
               setIsAdmin(false);
+              setRole('viewer');
             }
           }, 0);
         } else {
           setIsAdmin(false);
+          setRole('viewer');
         }
 
         // Always stop the loading spinner once we've processed the first event
@@ -91,6 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setSession(null);
       setIsAdmin(false);
+      setRole('viewer');
     }
   };
 
@@ -101,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         session,
         isAuthenticated: !!user,
         isAdmin,
+        role,
         isLoading,
         logout,
       }}

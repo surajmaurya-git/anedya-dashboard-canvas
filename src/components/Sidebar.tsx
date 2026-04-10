@@ -131,16 +131,16 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
         </div> 
 
 
-        {/* Admin Header */}
-        <div className="my-4 border-t border-border" />
-        <div className="pt-4 pb-1 px-3">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Admin
-          </h3>
-        </div>
-
         {adminMenuItems.length > 0 && (
           <>
+          {/* Admin Header */}
+          <div className="my-4 border-t border-border" />
+          <div className="pt-4 pb-1 px-3">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Admin
+            </h3>
+          </div>
+
             <div className="space-y-1 px-2">
               {adminMenuItems.map((item) => {
                 const Icon = item.icon;
