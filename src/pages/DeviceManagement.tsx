@@ -115,7 +115,7 @@ const DeviceManagement = () => {
                   <Label htmlFor="new-title" className="text-xs">Title</Label>
                   <Input
                     id="new-title"
-                    placeholder="e.g. Warehouse Sensor"
+                    placeholder="e.g. Device 1"
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleAddDevice()}
