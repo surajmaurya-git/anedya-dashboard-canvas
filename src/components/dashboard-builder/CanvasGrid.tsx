@@ -246,7 +246,7 @@ function SectionGrid({ section, isOnly }: { section: Section; isOnly: boolean })
 }
 
 // ─── Main Canvas ─────────────────────────────
-export default function CanvasGrid() {
+export default function CanvasGrid({ onSave }: { onSave?: () => void }) {
   const { sections, addSection, setSelectedWidget, setSelectedSection, selectedWidgetId, selectedSectionId, copyWidget, pasteWidget, removeWidget, duplicateWidget } = useBuilderStore();
 
   useEffect(() => {
@@ -271,6 +271,9 @@ export default function CanvasGrid() {
           e.preventDefault();
           duplicateWidget(selectedWidgetId, sectionId);
         }
+      } else if (isMod && e.key === 's') {
+        e.preventDefault();
+        onSave?.();
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
         // Avoid deleting when input is focused
         if ((document.activeElement as HTMLElement)?.tagName === 'INPUT') return;
@@ -284,14 +287,14 @@ export default function CanvasGrid() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedWidgetId, selectedSectionId, sections, copyWidget, pasteWidget, removeWidget, duplicateWidget]);
+  }, [selectedWidgetId, selectedSectionId, sections, copyWidget, pasteWidget, removeWidget, duplicateWidget, onSave]);
 
   const sortedSections = [...sections].sort((a, b) => a.order - b.order);
 
   return (
     <div
       className="flex-1 bg-gray-100 overflow-y-auto h-full p-4"
-      onClick={() => { setSelectedWidget(null); setSelectedSection(null); }}
+      onClick={() => { setSelectedWidget(null); }}
     >
       <div className="w-full max-w-7xl mx-auto space-y-6">
         <DeviceBannerPreview />

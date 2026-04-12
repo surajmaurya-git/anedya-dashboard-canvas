@@ -1,21 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ComponentSidebar from './ComponentSidebar';
 import CanvasGrid from './CanvasGrid';
 import PropertiesPanel from './PropertiesPanel';
 import { Button } from '@/components/ui/button';
-import { Save, Download, Upload } from 'lucide-react';
+import { Save, Download, Upload, Loader2 } from 'lucide-react';
 import { useBuilderStore } from '../../store/useBuilderStore';
 
-export default function BuilderLayout({ onSave }: { onSave: (templateData: any) => void }) {
+export default function BuilderLayout({ onSave }: { onSave: (templateData: any) => void | Promise<void> }) {
   const { sections, layout, widgets, setTemplate } = useBuilderStore();
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    onSave({
-      version: '2.0',
-      sections,
-      layout,
-      widgets
-    });
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onSave({
+        version: '2.0',
+        sections,
+        layout,
+        widgets
+      });
+    } catch (error) {
+      console.error('Failed to save template:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleExport = () => {
@@ -83,8 +91,21 @@ export default function BuilderLayout({ onSave }: { onSave: (templateData: any) 
             >
                <Download size={16} /> Export
             </Button>
-            <Button onClick={handleSave} size="sm" className="gap-2">
-               <Save size={16} /> Save Template
+            <Button 
+              onClick={handleSave} 
+              size="sm" 
+              className="gap-2" 
+              disabled={isSaving}
+            >
+               {isSaving ? (
+                 <>
+                   <Loader2 size={16} className="animate-spin" /> Saving...
+                 </>
+               ) : (
+                 <>
+                   <Save size={16} /> Save Template
+                 </>
+               )}
             </Button>
          </div>
       </div>
@@ -92,7 +113,7 @@ export default function BuilderLayout({ onSave }: { onSave: (templateData: any) 
       {/* 3-Column main area */}
       <div className="flex flex-1 overflow-hidden">
         <ComponentSidebar />
-        <CanvasGrid />
+        <CanvasGrid onSave={handleSave} />
         <PropertiesPanel />
       </div>
     </div>
