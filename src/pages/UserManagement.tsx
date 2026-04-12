@@ -291,7 +291,7 @@ const UserManagement = () => {
                           {allDevices.length === 0 ? (
                             <p className="text-xs text-muted-foreground">No devices exist in the system yet.</p>
                           ) : (
-                            <ScrollArea className="h-[280px] rounded-md border p-4 bg-muted/10">
+                            <ScrollArea className="h-[180px] rounded-md border p-4 bg-muted/10">
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {filteredDevices.length === 0 ? (
                                   <div className="col-span-full py-8 text-center text-xs text-muted-foreground">
