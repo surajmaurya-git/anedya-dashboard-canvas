@@ -38,11 +38,11 @@ Follow this exact order for a smooth deployment.
 
 1. Create a free account and a new project on [Supabase](https://supabase.com).
 2. Save these values from your Supabase dashboard:
+   - **Database password** (the password for this Supabase project)
+   - **Project ID (Project Ref ID)** (the `<project-ref>` in `https://<project-ref>.supabase.co`)
+   - **Personal Access Token** ([Account Settings → Access Tokens](https://supabase.com/dashboard/account/tokens))
    - **Project URL** (Project Settings → API)
    - **Anon key** (Project Settings → API)
-   - **Project Reference ID** (the `<project-ref>` in `https://<project-ref>.supabase.co`)
-   - **Database password** (the password for this Supabase project)
-   - **Personal Access Token** ([Account Settings → Access Tokens](https://supabase.com/dashboard/account/tokens))
 
 ### Step 3: In your fork, add GitHub secrets and run workflow
 
@@ -77,7 +77,8 @@ Then:
 3. Add the environment variables below.
 4. Click **Deploy**.
 
-Vercel will ask for:
+**Environment Variables:**
+Set the following Vercel environment variables:
 
 - `VITE_SUPABASE_PROJECT_URL`
 - `VITE_SUPABASE_ANON_KEY`

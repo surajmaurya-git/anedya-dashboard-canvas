@@ -291,24 +291,13 @@ const Home: React.FC<HomeProps> = ({
                       </div>
                     ))}
 
-                <div>
-                  <span className="font-medium text-muted-foreground flex items-center gap-2 mb-1">
-                    <Signal className="h-4 w-4" />
-                    Network Strength
-                  </span>
-                  {deviceStatus === "offline" ? (
-                    <span className="block pl-6 font-medium text-muted-foreground">
-                      Device Offline
+                {signalStrength !== null && signalStrength !== undefined && deviceStatus !== "offline" && (
+                  <div>
+                    <span className="font-medium text-muted-foreground flex items-center gap-2 mb-1">
+                      <Signal className="h-4 w-4" />
+                      Network Strength
                     </span>
-                  ) : (
-                    (() => {
-                      if (
-                        signalStrength === null ||
-                        signalStrength === undefined
-                      ) {
-                        return <span className="block pl-6">-</span>;
-                      }
-
+                    {(() => {
                       const networkTypeTag = nodeDetails.tags?.find(
                         (tag) =>
                           tag.key === "networkType" || tag.key === "Network Type"
@@ -370,9 +359,9 @@ const Home: React.FC<HomeProps> = ({
                           </span>
                         </span>
                       );
-                    })()
-                  )}
-                </div>
+                    })()}
+                  </div>
+                )}
 
                 {gatewayError && (
                   <div className="md:col-span-2 lg:col-span-2">
