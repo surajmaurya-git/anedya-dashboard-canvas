@@ -72,7 +72,7 @@ export function HistoricalTrendWidget({
           variable: deviceKey,
           from: from,
           to: to,
-          order: "asc",
+          order: "desc",
           limit: 0,
         }),
       });
