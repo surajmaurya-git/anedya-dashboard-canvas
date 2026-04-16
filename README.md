@@ -81,10 +81,10 @@ Then:
 Set the following Vercel environment variables:
 
 ```
-VITE_SUPABASE_PROJECT_URL=""
-VITE_SUPABASE_ANON_KEY=""
-VITE_ANEDYA_API_KEY=""
 VITE_APP_NAME=""
+VITE_ANEDYA_API_KEY=""
+VITE_SUPABASE_ANON_KEY=""
+VITE_SUPABASE_PROJECT_URL=""
 ```
 
 ### Step 6: Run first-time setup
@@ -138,16 +138,32 @@ This repo uses Husky to run `npm run scan:secrets` before every commit.
 
 ### Manual Database Setup (CLI)
 
-If you don't want to use GitHub Actions, you can push the automated database setup manually using the Supabase CLI:
+If you don't want to use GitHub Actions, you can push the database setup manually using the Supabase CLI.
+
+> **Note:** Ensure you have installed the project dependencies first via `npm install`.
+
+#### 1. Log in to your Supabase account
 
 ```bash
-npm install -g supabase
-supabase login
-supabase link --project-ref YOUR_SUPABASE_PROJECT_REF
-supabase db push
-supabase functions deploy create-user --no-verify-jwt
-supabase functions deploy delete-user --no-verify-jwt
-supabase functions deploy setup-admin --no-verify-jwt
+npm run supabase:login
+```
+
+#### 2. Link to your specific project
+
+```bash
+npx supabase link --project-ref YOUR_SUPABASE_PROJECT_REF
+```
+
+#### 3. Run database migrations
+
+```bash
+npm run supabase:push
+```
+
+#### 4. Deploy all Edge Functions (create-user, delete-user, setup-admin)
+
+```bash
+npm run supabase:deploy-funcs
 ```
 
 ## 🛠 Tech Stack

@@ -12,7 +12,10 @@
     "scan:secrets": "node scripts/scan-staged-secrets.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepare": "husky"
+    "prepare": "husky",
+    "supabase:login": "supabase login",
+    "supabase:deploy-funcs": "supabase functions deploy create-user --no-verify-jwt && supabase functions deploy delete-user --no-verify-jwt && supabase functions deploy setup-admin --no-verify-jwt",
+    "supabase:push": "supabase db push"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
