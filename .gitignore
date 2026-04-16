@@ -30,3 +30,10 @@ dist-ssr
 .devctx/
 development/
 .agent/*
+
+supabase/.temp/
+supabase/.cache/
+supabase/.env.local
+supabase/.env.development.local
+supabase/.env.test.local
+supabase/.env.production.local
