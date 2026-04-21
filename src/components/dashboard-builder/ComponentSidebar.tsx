@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Gauge, LineChart, Hash, Settings, PieChart, ToggleRight } from 'lucide-react';
+import { Gauge, LineChart, Hash, Settings, PieChart, ToggleRight, Battery } from 'lucide-react';
 import { useBuilderStore } from '../../store/useBuilderStore';
 import { WIDGET_SIZE_CONSTRAINTS } from './widgetConfig';
 
@@ -11,6 +11,7 @@ const WIDGET_TYPES = [
   { id: 'ValueStoreWidget', name: 'Value Store Control', icon: <Settings size={18} /> },
   { id: 'DonutChartWidget',    name: 'Donut Chart',          icon: <PieChart size={18} /> },
   { id: 'ToggleSwitchWidget', name: 'Toggle Switch',         icon: <ToggleRight size={18} /> },
+  { id: 'BatteryWidget',      name: 'Battery Level',         icon: <Battery size={18} /> },
 ];
 
 export default function ComponentSidebar() {

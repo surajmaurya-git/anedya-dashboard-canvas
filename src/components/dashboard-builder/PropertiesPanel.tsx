@@ -635,6 +635,162 @@ export default function PropertiesPanel() {
           </div>
         )}
 
+        {/* ── BatteryWidget ────────────────────────────────────────── */}
+        {widget.type === 'BatteryWidget' && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Data Source</Label>
+              <Select
+                value={draftConfig.dataSource || 'valuestore'}
+                onValueChange={(val) => handleConfigChange({ dataSource: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select data source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="valuestore">Valuestore</SelectItem>
+                  <SelectItem value="variable">Variable</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Min (0%)</Label>
+                <Input
+                  type="number"
+                  className="h-8 text-xs"
+                  placeholder="0"
+                  value={draftConfig.min ?? '0'}
+                  onChange={(e) => handleConfigChange({ 
+                    min: e.target.value === '' ? undefined : Number(e.target.value) 
+                  })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Max (100%)</Label>
+                <Input
+                  type="number"
+                  className="h-8 text-xs"
+                  placeholder="100"
+                  value={draftConfig.max ?? '100'}
+                  onChange={(e) => handleConfigChange({ 
+                    max: e.target.value === '' ? undefined : Number(e.target.value) 
+                  })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Unit symbol</Label>
+              <Input
+                className="h-8 text-xs"
+                placeholder="e.g. %, V"
+                value={draftConfig.unit || ''}
+                onChange={(e) => handleConfigChange({ unit: e.target.value })}
+              />
+            </div>
+
+            {/* ── Value Mappings (For Color) ── */}
+            <div className="space-y-3 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-1.5">
+                  <Palette className="h-3.5 w-3.5" />
+                  Color Mappings
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => {
+                    const current: ValueMapping[] = draftConfig.valueMappings || [];
+                    handleConfigChange({
+                      valueMappings: [
+                        ...current,
+                        { id: `m-${Date.now()}`, operator: '<', compareValue: '20', displayText: '', color: '#ef4444' },
+                      ],
+                    });
+                  }}
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add Rule
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Set battery colors based on conditions (e.g. If &lt; 20, color = Red). Default is Green. First match wins.
+              </p>
+
+              {(draftConfig.valueMappings as ValueMapping[] || []).map((mapping: ValueMapping, idx: number) => (
+                <div key={mapping.id} className="border rounded-lg p-3 space-y-2 bg-muted/30 relative">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-1 right-1 h-6 w-6 text-muted-foreground hover:text-destructive"
+                    onClick={() => {
+                      const updated = (draftConfig.valueMappings as ValueMapping[]).filter(
+                        (_: ValueMapping, i: number) => i !== idx
+                      );
+                      handleConfigChange({ valueMappings: updated });
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+
+                  <div className="flex gap-2 items-center pr-6">
+                    <span className="text-xs text-muted-foreground shrink-0">If value</span>
+                    <Select
+                      value={mapping.operator}
+                      onValueChange={(val) => {
+                        const updated = [...(draftConfig.valueMappings as ValueMapping[])];
+                        updated[idx] = { ...updated[idx], operator: val as ValueMapping['operator'] };
+                        handleConfigChange({ valueMappings: updated });
+                      }}
+                    >
+                      <SelectTrigger className="h-8 w-[80px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="==">==</SelectItem>
+                        <SelectItem value="!=">!=</SelectItem>
+                        <SelectItem value=">">&gt;</SelectItem>
+                        <SelectItem value="<">&lt;</SelectItem>
+                        <SelectItem value=">=">&gt;=</SelectItem>
+                        <SelectItem value="<=">&lt;=</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      className="h-8 text-xs flex-1"
+                      placeholder="Value"
+                      value={mapping.compareValue}
+                      onChange={(e) => {
+                        const updated = [...(draftConfig.valueMappings as ValueMapping[])];
+                        updated[idx] = { ...updated[idx], compareValue: e.target.value };
+                        handleConfigChange({ valueMappings: updated });
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex gap-2 items-center">
+                    <span className="text-xs text-muted-foreground shrink-0">Color</span>
+                    <Input
+                      type="color"
+                      className="h-8 w-full p-0.5 cursor-pointer rounded-sm"
+                      value={mapping.color || '#22c55e'}
+                      onChange={(e) => {
+                        const updated = [...(draftConfig.valueMappings as ValueMapping[])];
+                        updated[idx] = { ...updated[idx], color: e.target.value };
+                        handleConfigChange({ valueMappings: updated });
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
