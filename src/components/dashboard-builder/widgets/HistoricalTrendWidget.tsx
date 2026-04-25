@@ -203,11 +203,20 @@ export function HistoricalTrendWidget({
     let sum = 0;
     let count = 0;
 
-    const lastPoint = data[data.length - 1];
-    const lastValue = lastPoint[deviceKey];
-    const lastTime = lastPoint.time;
+    let lastValue = undefined;
+    let lastTime = "";
+    
+    for (let i = data.length - 1; i >= 0; i--) {
+      if (data[i][deviceKey] !== null && data[i][deviceKey] !== undefined) {
+        lastValue = data[i][deviceKey];
+        lastTime = data[i].time;
+        break;
+      }
+    }
 
     for (const item of data) {
+      if (item[deviceKey] === null || item[deviceKey] === undefined) continue;
+
       const val = Number(item[deviceKey]);
       if (!isNaN(val)) {
         if (val < min) {
