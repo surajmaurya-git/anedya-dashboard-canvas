@@ -126,8 +126,51 @@ export function SparklineWidget({
 
       <CardContent className="p-0 flex-1 flex flex-col relative h-full">
         {isEditMode ? (
-          <div className="absolute inset-4 flex items-center justify-center bg-muted/30 text-muted-foreground text-sm rounded outline-dashed outline-2 outline-border">
-            Sparkline Preview
+          <div className="flex flex-col h-full w-full p-4 relative overflow-hidden group">
+            {/* Mock Content */}
+            <div className="flex-1 flex flex-col items-center justify-center mt-7 relative z-10">
+              <div className="flex items-baseline gap-1 opacity-90">
+                <span className="text-5xl font-extrabold tracking-tight" style={{ color: strokeColor }}>
+                  42
+                </span>
+                <span className="text-lg font-bold text-muted-foreground/80">
+                  {unit || 'unit'}
+                </span>
+              </div>
+              <div className="flex items-center text-xs font-bold px-2 py-0.5 mt-2 text-green-500 opacity-90">
+                <ArrowUp className="w-3 h-3 mr-1" strokeWidth={3} />
+                <span>12.5%</span>
+              </div>
+            </div>
+
+            {/* Bottom Offset for Graph space */}
+            <div className="h-10" />
+
+            {/* Mock Sparkline background */}
+            <div className="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none opacity-20 z-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={[
+                  { v: 30 }, { v: 45 }, { v: 35 }, { v: 60 }, { v: 40 }, { v: 55 }, { v: 50 }
+                ]}>
+                  <Area
+                    type="monotone"
+                    dataKey="v"
+                    stroke={strokeColor}
+                    fill={strokeColor}
+                    strokeWidth={2}
+                    isAnimationActive={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Overlay Label
+            <div className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[1px] z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="bg-background border border-border px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Sparkline Preview</span>
+              </div>
+            </div> */}
           </div>
         ) : isLoading && data.length === 0 ? (
           <div className="absolute inset-0 p-4 shrink-0 h-full">
