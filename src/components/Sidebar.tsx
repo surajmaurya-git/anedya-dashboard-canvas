@@ -9,7 +9,8 @@ import {
   LayoutDashboard,
   Home as HomeIcon,
   Shield,
-  Server
+  Server,
+  LayoutTemplate
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -44,6 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
   const adminMenuItems = [
     { icon: Shield, label: 'Admin Dashboard', path: '/admin', show: isAdmin },
     { icon: Server, label: 'Device Management', path: '/admin/devices', show: isAdmin },
+    { icon: LayoutTemplate, label: 'Template Management', path: '/admin/templates', show: isAdmin },
     { icon: Users, label: 'User Management', path: '/users', show: isAdmin },
     { icon: LayoutDashboard, label: 'Dashboard Builder', path: '/builder', show: isAdmin },
   ].filter(item => item.show);

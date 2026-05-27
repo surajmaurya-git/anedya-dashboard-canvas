@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Wifi, Plus, Pencil, Trash2, Check, X, Loader2, Search } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Wifi, Plus, Pencil, Trash2, Check, X, Loader2, Search, LayoutTemplate } from "lucide-react";
 import { useDevices, useAddDevice, useUpdateDevice, useDeleteDevice, Device } from "@/hooks/useDevices";
 import { toast } from "sonner";
 
@@ -229,8 +230,21 @@ const DeviceManagement = () => {
                       ) : (
                         <>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">{device.title}</p>
-                            <p className="text-xs text-muted-foreground truncate font-mono">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-sm truncate">{device.title}</p>
+                              {device.dashboard_templates ? (
+                                <Badge variant="outline" className="text-[10px] h-5 px-1.5 gap-1 font-normal bg-primary/5">
+                                  <LayoutTemplate className="h-3 w-3" />
+                                  {device.dashboard_templates.name} {device.dashboard_templates.name === "Default" && "(Default)"}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-[10px] h-5 px-1.5 gap-1 font-normal text-muted-foreground">
+                                  <LayoutTemplate className="h-3 w-3" />
+                                  Default Template
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate font-mono mt-0.5">
                               {device.node_id}
                             </p>
                           </div>

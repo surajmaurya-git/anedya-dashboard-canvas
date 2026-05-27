@@ -8,7 +8,10 @@ export interface Device {
   node_id: string;
   created_at: string;
   template_id: string | null;
-  dashboard_templates?: { schema: any } | null;
+  dashboard_templates?: {
+    schema: any;
+    name: string;
+  } | null;
 }
 
 const DEVICES_QUERY_KEY = ["devices"];
@@ -22,7 +25,7 @@ export function useDevices() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("devices")
-        .select("*, dashboard_templates(schema)")
+        .select("*, dashboard_templates(schema, name)")
         .order("created_at", { ascending: true });
 
       if (error) throw error;

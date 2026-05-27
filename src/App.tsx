@@ -15,6 +15,7 @@ import Setup from "./pages/Setup";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 import TemplateBuilder from "./pages/TemplateBuilder";
+import TemplateManagement from "./pages/TemplateManagement";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { useDevices } from "@/hooks/useDevices";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -114,6 +115,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute adminOnly>
             <UserManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/templates"
+        element={
+          <ProtectedRoute adminOnly>
+            <TemplateManagement />
           </ProtectedRoute>
         }
       />
