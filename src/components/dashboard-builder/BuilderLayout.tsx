@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Save, Download, Upload, Loader2 } from 'lucide-react';
 import { useBuilderStore } from '../../store/useBuilderStore';
 
+import { toast } from 'sonner';
+
 export default function BuilderLayout({ onSave }: { onSave: (templateData: any) => void | Promise<void> }) {
   const { sections, layout, widgets, setTemplate } = useBuilderStore();
   const [isSaving, setIsSaving] = useState(false);
@@ -50,16 +52,25 @@ export default function BuilderLayout({ onSave }: { onSave: (templateData: any) 
     reader.onload = (e) => {
       try {
         const template = JSON.parse(e.target?.result as string);
-        if (template.sections && template.layout && template.widgets) {
-          setTemplate(template.sections, template.layout, template.widgets);
+        
+        // Extract layout, widgets, and sections supporting both direct and nested formats
+        const targetLayout = template.layout || template.schema?.layout;
+        const targetWidgets = template.widgets || template.schema?.widgets;
+        const targetSections = template.sections || template.schema?.sections || [];
+
+        if (targetLayout && targetWidgets) {
+          setTemplate(targetSections, targetLayout, targetWidgets);
+          toast.success('Template layout imported successfully!');
         } else {
-          alert('Invalid template format');
+          toast.error('Invalid template format: layout or widgets missing.');
         }
       } catch (error) {
-        alert('Error parsing template file');
+        toast.error('Error parsing template file. Make sure it is a valid JSON file.');
       }
     };
     reader.readAsText(file);
+    // Reset file input so that the same file can be re-uploaded if needed
+    event.target.value = '';
   };
 
   return (

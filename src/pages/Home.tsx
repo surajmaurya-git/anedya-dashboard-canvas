@@ -63,13 +63,28 @@ const Home: React.FC<HomeProps> = ({
         if (deviceData?.dashboard_templates?.schema) {
           schema = deviceData.dashboard_templates.schema;
         } else {
-          const { data: defaultData, error: defaultError } = await supabase
+          // Attempt to find default template by is_default first
+          let { data: defaultData, error: defaultError } = await supabase
             .from("dashboard_templates")
             .select("schema")
-            .ilike("name", "default")
+            .eq("is_default", true)
             .maybeSingle();
+
+          // Fallback to name search if is_default search fails or is empty
+          if (defaultError || !defaultData) {
+            const { data: fallbackData, error: fallbackError } = await supabase
+              .from("dashboard_templates")
+              .select("schema")
+              .ilike("name", "default")
+              .maybeSingle();
+            
+            if (!fallbackError && fallbackData) {
+              defaultData = fallbackData;
+            } else if (fallbackError) {
+              throw fallbackError;
+            }
+          }
           
-          if (defaultError) throw defaultError;
           schema = defaultData?.schema;
         }
 

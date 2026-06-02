@@ -15,14 +15,34 @@ export default function TemplateBuilder() {
   useEffect(() => {
     const loadTemplate = async () => {
       try {
-        let query = supabase.from('dashboard_templates').select('*');
+        let data = null;
         if (templateId) {
-          query = query.eq('id', templateId);
+          const { data: tpl } = await supabase
+            .from('dashboard_templates')
+            .select('*')
+            .eq('id', templateId)
+            .single();
+          data = tpl;
         } else {
-          query = query.eq('name', 'Default');
+          // Attempt to find by is_default first
+          const { data: defaultTpl } = await supabase
+            .from('dashboard_templates')
+            .select('*')
+            .eq('is_default', true)
+            .maybeSingle();
+          
+          data = defaultTpl;
+
+          // Fallback to name 'Default'
+          if (!data) {
+            const { data: fallbackTpl } = await supabase
+              .from('dashboard_templates')
+              .select('*')
+              .eq('name', 'Default')
+              .maybeSingle();
+            data = fallbackTpl;
+          }
         }
-        
-        const { data } = await query.single();
 
         if (data?.schema) {
           const s = data.schema as any;
@@ -49,12 +69,22 @@ export default function TemplateBuilder() {
           .update({ schema: templateData, updated_at: new Date().toISOString() })
           .eq('id', templateId));
       } else {
-        // Find default template
-        const { data: defaultTpl } = await supabase
+        // Find default template by is_default first
+        let { data: defaultTpl } = await supabase
           .from('dashboard_templates')
           .select('id')
-          .eq('name', 'Default')
-          .single();
+          .eq('is_default', true)
+          .maybeSingle();
+
+        // Fallback to name 'Default'
+        if (!defaultTpl) {
+          const { data: fallbackTpl } = await supabase
+            .from('dashboard_templates')
+            .select('id')
+            .eq('name', 'Default')
+            .maybeSingle();
+          defaultTpl = fallbackTpl;
+        }
           
         if (defaultTpl?.id) {
           ({ error } = await supabase
@@ -64,7 +94,7 @@ export default function TemplateBuilder() {
         } else {
           ({ error } = await supabase
             .from('dashboard_templates')
-            .insert({ name: 'Default', schema: templateData }));
+            .insert({ name: 'Default', is_default: true, schema: templateData }));
         }
       }
 
