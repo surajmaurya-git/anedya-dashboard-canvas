@@ -46,25 +46,51 @@ const Home: React.FC<HomeProps> = ({
   React.useEffect(() => {
     const loadTemplate = async () => {
       try {
-        const { data } = await supabase
-          .from("dashboard_templates")
-          .select("schema")
-          .eq("name", "default")
-          .single();
+        const { data: deviceData, error: deviceError } = await supabase
+          .from("devices")
+          .select(`
+            template_id,
+            dashboard_templates (
+              schema
+            )
+          `)
+          .eq("node_id", nodeId)
+          .maybeSingle();
 
-        if (data?.schema) {
-          const schema = data.schema as any;
-          if (schema.layout && schema.widgets && schema.layout.length > 0) {
-            setDashboardSchema(schema);
-          }
+        if (deviceError) throw deviceError;
+
+        let schema = null;
+        if (deviceData?.dashboard_templates?.schema) {
+          schema = deviceData.dashboard_templates.schema;
+        } else {
+          const { data: defaultData, error: defaultError } = await supabase
+            .from("dashboard_templates")
+            .select("schema")
+            .ilike("name", "default")
+            .maybeSingle();
+          
+          if (defaultError) throw defaultError;
+          schema = defaultData?.schema;
         }
-      } catch {
+
+        if (schema) {
+          const parsedSchema = schema as any;
+          if (parsedSchema.layout && parsedSchema.widgets && parsedSchema.layout.length > 0) {
+            setDashboardSchema(parsedSchema);
+          } else {
+            setDashboardSchema(null);
+          }
+        } else {
+          setDashboardSchema(null);
+        }
+      } catch (err) {
+        console.error("Error loading template:", err);
         setDashboardSchema(null);
       }
     };
 
     loadTemplate();
-  }, []);
+  }, [nodeId]);
 
   const tagsToDisplay: { name: string; key: string }[] = [
     {

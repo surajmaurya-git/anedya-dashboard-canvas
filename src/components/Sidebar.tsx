@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Settings, 
+import {
+  Settings,
   LogOut,
   Wifi,
   Loader2,
@@ -41,13 +41,12 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
   };
 
   const settingsMenuItem = { icon: Settings, label: 'Settings', path: '/settings', show: true };
-  
+
   const adminMenuItems = [
     { icon: Shield, label: 'Admin Dashboard', path: '/admin', show: isAdmin },
     { icon: Server, label: 'Device Management', path: '/admin/devices', show: isAdmin },
-    { icon: LayoutTemplate, label: 'Template Management', path: '/admin/templates', show: isAdmin },
     { icon: Users, label: 'User Management', path: '/users', show: isAdmin },
-    { icon: LayoutDashboard, label: 'Dashboard Builder', path: '/builder', show: isAdmin },
+    { icon: LayoutTemplate, label: 'Dashboard Canvas', path: '/admin/templates', show: isAdmin },
   ].filter(item => item.show);
 
   const SidebarContent = () => (
@@ -100,7 +99,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
               <div className="space-y-1">
                 {devices.map((device) => {
                   const isActive = location.pathname === device.path;
-                  
+
                   return (
                     <Button
                       key={device.id}
@@ -120,9 +119,9 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
             </div>
           )}
         </div>
-        
+
         <div className="my-4 border-t border-border" />
-        
+
         <div className="space-y-1 px-2">
           <Button
             variant={location.pathname === settingsMenuItem.path ? "secondary" : "ghost"}
@@ -135,24 +134,24 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
             <settingsMenuItem.icon className="h-5 w-5 shrink-0" />
             <span className="truncate">{settingsMenuItem.label}</span>
           </Button>
-        </div> 
+        </div>
 
 
         {adminMenuItems.length > 0 && (
           <>
-          {/* Admin Header */}
-          <div className="my-4 border-t border-border" />
-          <div className="pt-4 pb-1 px-3">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Admin
-            </h3>
-          </div>
+            {/* Admin Header */}
+            <div className="my-4 border-t border-border" />
+            <div className="pt-4 pb-1 px-3">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Admin
+              </h3>
+            </div>
 
             <div className="space-y-1 px-2">
               {adminMenuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
-                
+
                 return (
                   <Button
                     key={item.path}

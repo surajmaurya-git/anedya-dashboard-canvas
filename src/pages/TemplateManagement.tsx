@@ -117,6 +117,10 @@ const TemplateManagement = () => {
   };
 
   const openAssignDialog = (template: Template) => {
+    if (template.is_default ?? (template.name === 'Default')) {
+      toast.error("Default template is automatically applied to all unassigned devices.");
+      return;
+    }
     setSelectedTemplateForAssign(template);
     // Auto-select devices already assigned to this template
     setSelectedDeviceIds(devices.filter(d => d.template_id === template.id).map(d => d.id));
@@ -179,7 +183,7 @@ const TemplateManagement = () => {
       <div className="space-y-6 max-w-6xl mx-auto">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Template Management</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard Canvas</h1>
             <p className="text-muted-foreground mt-2">
               Create and manage dashboard templates to customize device views.
             </p>
@@ -245,10 +249,17 @@ const TemplateManagement = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="gap-1">
-                            <MonitorSmartphone className="h-3 w-3" />
-                            {template.devices?.[0]?.count || 0}
-                          </Badge>
+                          {(template.is_default ?? (template.name === 'Default')) ? (
+                            <Badge variant="secondary" className="gap-1 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
+                              <MonitorSmartphone className="h-3 w-3" />
+                              All Unassigned ({devices.filter(d => !d.template_id).length})
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="gap-1">
+                              <MonitorSmartphone className="h-3 w-3" />
+                              {template.devices?.[0]?.count || 0}
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell className="text-muted-foreground text-sm">
                           {format(new Date(template.created_at), "MMM d, yyyy")}
@@ -263,7 +274,13 @@ const TemplateManagement = () => {
                                 <Star className="h-4 w-4" />
                               </Button>
                             )}
-                            <Button variant="ghost" size="sm" onClick={() => openAssignDialog(template)} title="Assign to Devices">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => openAssignDialog(template)} 
+                              disabled={template.is_default ?? (template.name === 'Default')}
+                              title={template.is_default ?? (template.name === 'Default') ? "Default template is automatically assigned to all unassigned devices" : "Assign to Devices"}
+                            >
                               <ArrowRight className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="sm" onClick={() => navigate(`/builder?id=${template.id}`)} title="Preview / Edit Layout">
