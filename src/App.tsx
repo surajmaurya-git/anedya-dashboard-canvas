@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
+import GeneralHome from "./pages/GeneralHome";
 import Settings from "./pages/Settings";
 import UserManagement from "./pages/UserManagement";
 import DeviceManagement from "./pages/DeviceManagement";
@@ -15,6 +16,7 @@ import Setup from "./pages/Setup";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import NotFound from "./pages/NotFound";
 import TemplateBuilder from "./pages/TemplateBuilder";
+import TemplateManagement from "./pages/TemplateManagement";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { useDevices } from "@/hooks/useDevices";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -59,26 +61,7 @@ const AppRoutes = () => {
         path="/home"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <div className="flex flex-col h-full items-center justify-center p-8 bg-muted/20">
-                <div className="text-center max-w-md">
-                  <h2 className="text-3xl font-bold mb-4">Welcome back</h2>
-                  <p className="text-muted-foreground mb-8">
-                    Select a device from the sidebar to view its dashboard.
-                  </p>
-                  
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-                      <div className="flex items-center justify-center space-x-3 text-primary mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-wifi"><path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.859a10 10 0 0 1 14 0"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/></svg>
-                        <h3 className="text-lg font-semibold text-foreground">Devices</h3>
-                      </div>
-                      <p className="text-4xl font-bold">{isLoading ? "-" : devices.length}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </DashboardLayout>
+            <GeneralHome />
           </ProtectedRoute>
         }
       />
@@ -114,6 +97,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute adminOnly>
             <UserManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/templates"
+        element={
+          <ProtectedRoute adminOnly>
+            <TemplateManagement />
           </ProtectedRoute>
         }
       />

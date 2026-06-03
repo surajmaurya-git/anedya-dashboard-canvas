@@ -63,18 +63,22 @@ function SectionView({
     };
   });
 
+  const showHeader = !section.hideHeader;
+
   return (
-    <div className="bg-card rounded-lg border border-border shadow-sm mb-8">
+    <div className={showHeader ? "bg-card rounded-lg border border-border shadow-sm mb-8" : "mb-8"}>
       {/* Section Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30 rounded-t-lg">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <Activity className="w-5 h-5 text-primary shrink-0" />
-          <h3 className="text-[20px] font-semibold text-foreground truncate">{section.title}</h3>
+      {showHeader && (
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30 rounded-t-lg">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <Activity className="w-5 h-5 text-primary shrink-0" />
+            <h3 className="text-[20px] font-semibold text-foreground truncate">{section.title}</h3>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Section Grid */}
-      <div ref={ref} className="w-full p-2">
+      <div ref={ref} className={showHeader ? "w-full p-2" : "w-full"}>
         {/* @ts-ignore - ReactGridLayout type mismatch with cols prop */}
         <ReactGridLayout
           className="layout"

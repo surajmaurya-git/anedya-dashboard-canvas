@@ -8,14 +8,28 @@ import { Switch } from '@/components/ui/switch';
 import { Plus, X, Palette, ChevronDown, ChevronUp } from 'lucide-react';
 import type { ValueMapping } from './widgets/ValueDisplayWidget';
 import type { DonutSeries } from './widgets/DonutChartWidget';
+import { useDevices } from '@/hooks/useDevices';
 
 export default function PropertiesPanel() {
-  const { selectedWidgetId, widgets, updateWidgetTitle, updateWidgetConfig } = useBuilderStore();
+  const {
+    selectedWidgetId,
+    widgets,
+    updateWidgetTitle,
+    updateWidgetConfig,
+    templateType,
+    selectedSectionId,
+    sections,
+    updateSectionTitle,
+    updateSectionHideHeader
+  } = useBuilderStore();
+  const { data: devices = [] } = useDevices();
 
   const widget = selectedWidgetId ? widgets[selectedWidgetId] : null;
+  const section = selectedSectionId ? sections.find(s => s.id === selectedSectionId) : null;
 
   const [draftTitle, setDraftTitle] = useState('');
   const [draftConfig, setDraftConfig] = useState<any>({});
+  const [sectionTitleDraft, setSectionTitleDraft] = useState('');
 
   useEffect(() => {
     if (widget) {
@@ -24,10 +38,54 @@ export default function PropertiesPanel() {
     }
   }, [selectedWidgetId]); // Reset draft when selection changes
 
+  useEffect(() => {
+    if (section) {
+      setSectionTitleDraft(section.title);
+    }
+  }, [selectedSectionId, section?.title]);
+
+  const handleSectionTitleChange = (newTitle: string) => {
+    setSectionTitleDraft(newTitle);
+    updateSectionTitle(selectedSectionId!, newTitle);
+  };
+
+  if (!selectedWidgetId && selectedSectionId && section) {
+    return (
+      <div className="w-72 border-l bg-card flex flex-col h-full">
+        <div className="p-4 border-b font-medium bg-background">
+          Section Properties
+        </div>
+        <div className="p-4 flex-1 overflow-y-auto space-y-6">
+          <div className="space-y-2">
+            <Label>Section Title</Label>
+            <Input
+              value={sectionTitleDraft}
+              onChange={(e) => handleSectionTitleChange(e.target.value)}
+              placeholder="Section Title"
+            />
+          </div>
+
+          <div className="flex items-center justify-between pt-4 border-t">
+            <div className="space-y-0.5">
+              <Label className="text-sm font-medium">Hide Header & Border</Label>
+              <p className="text-xs text-muted-foreground">
+                Hide the section border and title. Widgets remain visible.
+              </p>
+            </div>
+            <Switch
+              checked={section.hideHeader || false}
+              onCheckedChange={(checked) => updateSectionHideHeader(section.id, checked)}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!selectedWidgetId || !widget) {
     return (
       <div className="w-72 border-l bg-card p-4 text-center text-sm text-muted-foreground h-full flex items-center justify-center">
-        Select a component to edit its properties
+        Select a component or section to edit its properties
       </div>
     );
   }
@@ -63,6 +121,31 @@ export default function PropertiesPanel() {
             onChange={(e) => handleTitleChange(e.target.value)}
           />
         </div>
+
+        {templateType === 'home' && (
+          <div className="space-y-2">
+            <Label>Target Device</Label>
+            <Select
+              value={draftConfig.nodeId || "none"}
+              onValueChange={(val) => handleConfigChange({ nodeId: val === "none" ? undefined : val })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select device" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No Specific Device</SelectItem>
+                {devices.map((d) => (
+                  <SelectItem key={d.node_id} value={d.node_id}>
+                    {d.title || d.node_id}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[10px] text-muted-foreground">
+              Select which device this widget fetches data from.
+            </p>
+          </div>
+        )}
 
         {/* Global Variable / Key for legacy/simple widgets */}
         {/* Global Variable / Key for legacy/simple widgets */}

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import BuilderLayout from '../components/dashboard-builder/BuilderLayout';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,62 +7,114 @@ import { toast } from 'sonner';
 import { useBuilderStore } from '@/store/useBuilderStore';
 
 export default function TemplateBuilder() {
-  const { setTemplate } = useBuilderStore();
+  const { setTemplate, setTemplateType, reset, templateType } = useBuilderStore();
+  const [searchParams] = useSearchParams();
+  const templateId = searchParams.get('id');
+  const queryType = searchParams.get('type') as 'device' | 'home' | null;
 
-  // Load existing default template on mount
+  // Load existing template on mount
   useEffect(() => {
-    const loadDefaultTemplate = async () => {
+    const loadTemplate = async () => {
       try {
-        const { data } = await supabase
-          .from('dashboard_templates')
-          .select('*')
-          .eq('name', 'default')
-          .single();
+        let data = null;
+        if (templateId) {
+          const { data: tpl } = await supabase
+            .from('dashboard_templates')
+            .select('*')
+            .eq('id', templateId)
+            .single();
+          data = tpl;
+        } else {
+          // Attempt to find by is_default first
+          const { data: defaultTpl } = await supabase
+            .from('dashboard_templates')
+            .select('*')
+            .eq('is_default', true)
+            .eq('type', queryType || 'device')
+            .maybeSingle();
+          
+          data = defaultTpl;
 
-        if (data?.schema) {
-          const s = data.schema as any;
-          if (s.layout && s.widgets) {
-            // Support v1 (no sections) and v2 (with sections)
-            const sections = s.sections || [];
-            setTemplate(sections, s.layout, s.widgets);
+          // Fallback to name 'Default'
+          if (!data) {
+            const { data: fallbackTpl } = await supabase
+              .from('dashboard_templates')
+              .select('*')
+              .eq('name', 'Default')
+              .eq('type', queryType || 'device')
+              .maybeSingle();
+            data = fallbackTpl;
           }
         }
+
+        if (data) {
+          setTemplateType(data.type || 'device');
+          if (data.schema) {
+            const s = data.schema as any;
+            if (s.layout && s.widgets) {
+              // Support v1 (no sections) and v2 (with sections)
+              const sections = s.sections || [];
+              setTemplate(sections, s.layout, s.widgets);
+            }
+          }
+        } else {
+          reset();
+          setTemplateType(queryType || 'device');
+        }
       } catch {
-        // No existing template yet — start fresh
+        reset();
+        setTemplateType(queryType || 'device');
       }
     };
-    loadDefaultTemplate();
-  }, [setTemplate]);
+    loadTemplate();
+  }, [setTemplate, setTemplateType, reset, templateId, queryType]);
 
-  // Auto-save as "default" template (upsert)
+  // Auto-save template (upsert)
   const handleSaveTemplate = async (templateData: any) => {
     try {
-      // Check if a default template already exists
-      const { data: existing } = await supabase
-        .from('dashboard_templates')
-        .select('id')
-        .eq('name', 'default')
-        .single();
-
       let error;
-      if (existing?.id) {
-        // Update existing
+      if (templateId) {
         ({ error } = await supabase
           .from('dashboard_templates')
-          .update({ schema: templateData })
-          .eq('id', existing.id));
+          .update({ schema: templateData, updated_at: new Date().toISOString() })
+          .eq('id', templateId));
       } else {
-        // Insert new
-        ({ error } = await supabase
+        // Find default template by is_default first
+        let { data: defaultTpl } = await supabase
           .from('dashboard_templates')
-          .insert({ name: 'default', schema: templateData }));
+          .select('id')
+          .eq('is_default', true)
+          .eq('type', templateType)
+          .maybeSingle();
+
+        // Fallback to name 'Default'
+        if (!defaultTpl) {
+          const { data: fallbackTpl } = await supabase
+            .from('dashboard_templates')
+            .select('id')
+            .eq('name', 'Default')
+            .eq('type', templateType)
+            .maybeSingle();
+          defaultTpl = fallbackTpl;
+        }
+          
+        if (defaultTpl?.id) {
+          ({ error } = await supabase
+            .from('dashboard_templates')
+            .update({ schema: templateData, updated_at: new Date().toISOString() })
+            .eq('id', defaultTpl.id));
+        } else {
+          ({ error } = await supabase
+            .from('dashboard_templates')
+            .insert({ name: 'Default', is_default: true, schema: templateData, type: templateType }));
+        }
       }
 
       if (error) throw error;
-      toast.success('Template saved successfully!');
+      toast.success('Template layout saved successfully!');
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || 'Failed to save template');
+      toast.error(err.message || 'Failed to save template layout');
     }
   };
 
