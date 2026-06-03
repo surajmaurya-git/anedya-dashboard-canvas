@@ -28,6 +28,7 @@ export interface Section {
   id: string;
   title: string;
   order: number;
+  hideHeader?: boolean;
 }
 
 export interface BuilderState {
@@ -38,10 +39,12 @@ export interface BuilderState {
   selectedSectionId: string | null;
   draggedWidgetType: string | null;
   copiedWidget: { layout: Layout; config: WidgetConfig } | null;
+  templateType: 'device' | 'home';
 
   // Section actions
   addSection: (title?: string) => string;
   updateSectionTitle: (sectionId: string, title: string) => void;
+  updateSectionHideHeader: (sectionId: string, hideHeader: boolean) => void;
   removeSection: (sectionId: string) => void;
   reorderSections: (sectionId: string, direction: 'up' | 'down') => void;
 
@@ -62,6 +65,7 @@ export interface BuilderState {
 
   // Template
   setTemplate: (sections: Section[], layout: Layout[], widgets: Record<string, WidgetConfig>) => void;
+  setTemplateType: (type: 'device' | 'home') => void;
   reset: () => void;
 }
 
@@ -78,6 +82,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   selectedSectionId: null,
   draggedWidgetType: null,
   copiedWidget: null,
+  templateType: 'device',
 
   addSection: (title?: string) => {
     const id = `section-${Date.now()}`;
@@ -90,6 +95,10 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
   updateSectionTitle: (sectionId, title) => set((state) => ({
     sections: state.sections.map(s => s.id === sectionId ? { ...s, title } : s),
+  })),
+
+  updateSectionHideHeader: (sectionId, hideHeader) => set((state) => ({
+    sections: state.sections.map(s => s.id === sectionId ? { ...s, hideHeader } : s),
   })),
 
   removeSection: (sectionId) => set((state) => {
@@ -260,8 +269,14 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     return { layout: nextLayout };
   }),
 
-  setSelectedWidget: (id) => set({ selectedWidgetId: id }),
-  setSelectedSection: (id) => set({ selectedSectionId: id }),
+  setSelectedWidget: (id) => set((state) => ({
+    selectedWidgetId: id,
+    selectedSectionId: id ? null : state.selectedSectionId
+  })),
+  setSelectedSection: (id) => set((state) => ({
+    selectedSectionId: id,
+    selectedWidgetId: id ? null : state.selectedWidgetId
+  })),
 
   setTemplate: (sections, layout, widgets) => {
     const activeSections = sections.length > 0 ? sections : [...DEFAULT_SECTIONS];
@@ -293,11 +308,14 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     });
   },
 
+  setTemplateType: (type) => set({ templateType: type }),
+
   reset: () => set({
     sections: [...DEFAULT_SECTIONS],
     layout: [],
     widgets: {},
     selectedWidgetId: null,
     selectedSectionId: null,
+    templateType: 'device',
   })
 }));

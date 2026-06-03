@@ -66,12 +66,14 @@ export default function WidgetRenderer(props: WidgetRendererProps) {
     );
   }
 
+  const resolvedNodeId = config.config?.nodeId || nodeId;
+
   switch (config.type) {
     case 'GaugeWidget':
       return (
         <GaugeWidgetRuntime
           config={config}
-          nodeId={nodeId}
+          nodeId={resolvedNodeId}
           pollIntervalMs={pollIntervalMs}
           isEditMode={isEditMode}
         />
@@ -80,7 +82,7 @@ export default function WidgetRenderer(props: WidgetRendererProps) {
       return (
         <HistoricalTrendWidget
           config={config}
-          nodeId={nodeId}
+          nodeId={resolvedNodeId}
           pollIntervalMs={pollIntervalMs}
           isEditMode={isEditMode}
           w={w}
@@ -91,7 +93,7 @@ export default function WidgetRenderer(props: WidgetRendererProps) {
       return (
         <AgrrChartWidget
           config={config}
-          nodeId={nodeId}
+          nodeId={resolvedNodeId}
           pollIntervalMs={pollIntervalMs}
           isEditMode={isEditMode}
           w={w}
@@ -102,7 +104,7 @@ export default function WidgetRenderer(props: WidgetRendererProps) {
       return (
         <AggregateGoalWidget
           config={config}
-          nodeId={nodeId}
+          nodeId={resolvedNodeId}
           pollIntervalMs={pollIntervalMs}
           isEditMode={isEditMode}
           w={w}
@@ -113,7 +115,7 @@ export default function WidgetRenderer(props: WidgetRendererProps) {
       return (
         <ValueDisplayWidget
           config={config}
-          nodeId={nodeId}
+          nodeId={resolvedNodeId}
           pollIntervalMs={pollIntervalMs}
           isEditMode={isEditMode}
         />
@@ -122,7 +124,7 @@ export default function WidgetRenderer(props: WidgetRendererProps) {
       return (
         <ValueStoreWidget
           config={config}
-          nodeId={nodeId}
+          nodeId={resolvedNodeId}
           pollIntervalMs={pollIntervalMs}
           isEditMode={isEditMode}
         />
@@ -131,7 +133,7 @@ export default function WidgetRenderer(props: WidgetRendererProps) {
       return (
         <DonutChartWidget
           config={config}
-          nodeId={nodeId}
+          nodeId={resolvedNodeId}
           pollIntervalMs={pollIntervalMs}
           isEditMode={isEditMode}
         />
@@ -140,7 +142,7 @@ export default function WidgetRenderer(props: WidgetRendererProps) {
       return (
         <ToggleSwitchWidget
           config={config}
-          nodeId={nodeId}
+          nodeId={resolvedNodeId}
           pollIntervalMs={pollIntervalMs}
           isEditMode={isEditMode}
         />
@@ -149,7 +151,7 @@ export default function WidgetRenderer(props: WidgetRendererProps) {
       return (
         <BatteryWidget
           config={config}
-          nodeId={nodeId}
+          nodeId={resolvedNodeId}
           pollIntervalMs={pollIntervalMs}
           isEditMode={isEditMode}
         />
@@ -158,7 +160,7 @@ export default function WidgetRenderer(props: WidgetRendererProps) {
       return (
         <SliderWidget
           config={config}
-          nodeId={nodeId}
+          nodeId={resolvedNodeId}
           pollIntervalMs={pollIntervalMs}
           isEditMode={isEditMode}
         />
@@ -167,7 +169,7 @@ export default function WidgetRenderer(props: WidgetRendererProps) {
       return (
         <TankWidget
           config={config}
-          nodeId={nodeId}
+          nodeId={resolvedNodeId}
           pollIntervalMs={pollIntervalMs}
           isEditMode={isEditMode}
         />
@@ -176,7 +178,7 @@ export default function WidgetRenderer(props: WidgetRendererProps) {
       return (
         <SparklineWidget
           config={config}
-          nodeId={nodeId}
+          nodeId={resolvedNodeId}
           pollIntervalMs={pollIntervalMs}
           isEditMode={isEditMode}
         />
@@ -185,7 +187,7 @@ export default function WidgetRenderer(props: WidgetRendererProps) {
       return (
         <MapWidget
           config={config}
-          nodeId={nodeId}
+          nodeId={resolvedNodeId}
           pollIntervalMs={pollIntervalMs}
           isEditMode={isEditMode}
         />
@@ -194,7 +196,7 @@ export default function WidgetRenderer(props: WidgetRendererProps) {
       return (
         <CameraViewerWidget
           config={config}
-          nodeId={nodeId}
+          nodeId={resolvedNodeId}
           isEditMode={isEditMode}
         />
       );

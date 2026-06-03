@@ -9,6 +9,7 @@ export interface Template {
   created_at: string;
   updated_at: string;
   is_default: boolean;
+  type: 'device' | 'home';
   devices?: { count: number }[];
 }
 
@@ -36,11 +37,12 @@ export function useCreateTemplate() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (template: { name: string; description?: string; schema?: any; is_default?: boolean }) => {
+    mutationFn: async (template: { name: string; description?: string; schema?: any; is_default?: boolean; type?: 'device' | 'home' }) => {
       const { data, error } = await supabase
         .from("dashboard_templates")
         .insert({
           ...template,
+          type: template.type || "device",
           schema: template.schema || { version: "1.0", layout: [], widgets: {} }
         })
         .select()
@@ -59,7 +61,7 @@ export function useUpdateTemplate() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; name?: string; description?: string; schema?: any; is_default?: boolean }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; name?: string; description?: string; schema?: any; is_default?: boolean; type?: 'device' | 'home' }) => {
       const { data, error } = await supabase
         .from("dashboard_templates")
         .update({ ...updates, updated_at: new Date().toISOString() })

@@ -67,6 +67,7 @@ const Home: React.FC<HomeProps> = ({
           let { data: defaultData, error: defaultError } = await supabase
             .from("dashboard_templates")
             .select("schema")
+            .eq("type", "device")
             .eq("is_default", true)
             .maybeSingle();
 
@@ -75,6 +76,7 @@ const Home: React.FC<HomeProps> = ({
             const { data: fallbackData, error: fallbackError } = await supabase
               .from("dashboard_templates")
               .select("schema")
+              .eq("type", "device")
               .ilike("name", "default")
               .maybeSingle();
             

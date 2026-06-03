@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Copy, Trash2, LayoutTemplate, Star, MonitorSmartphone, Loader2, ArrowRight, Edit } from "lucide-react";
+import { Search, Plus, Copy, Trash2, LayoutTemplate, Star, MonitorSmartphone, Loader2, ArrowRight, Edit, Cpu } from "lucide-react";
 import { useTemplates, useCreateTemplate, useUpdateTemplate, useDeleteTemplate, useAssignTemplate, Template } from "@/hooks/useTemplates";
 import { useDevices } from "@/hooks/useDevices";
 import { format } from "date-fns";
@@ -14,19 +14,22 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const TemplateManagement = () => {
   const navigate = useNavigate();
   const { data: templates = [], isLoading: templatesLoading } = useTemplates();
   const { data: devices = [], isLoading: devicesLoading } = useDevices();
-  
+
   const createTemplate = useCreateTemplate();
   const updateTemplate = useUpdateTemplate();
   const deleteTemplate = useDeleteTemplate();
   const assignTemplate = useAssignTemplate();
 
+  const [activeTab, setActiveTab] = useState<'device' | 'home'>('device');
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Assignment Dialog State
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [selectedTemplateForAssign, setSelectedTemplateForAssign] = useState<Template | null>(null);
@@ -36,15 +39,17 @@ const TemplateManagement = () => {
 
   // Edit/Create Dialog State
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editTemplateData, setEditTemplateData] = useState<{ id?: string, name: string, description: string }>({ name: "", description: "" });
+  const [editTemplateData, setEditTemplateData] = useState<{ id?: string, name: string, description: string, type: 'device' | 'home' }>({ name: "", description: "", type: "device" });
 
-  const filteredTemplates = templates.filter(t => 
-    t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredTemplates = templates.filter(t =>
+    (t.type === activeTab || (activeTab === 'device' && !t.type)) && (
+      t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
   );
 
   const filteredDevices = useMemo(() => {
-    return devices.filter(d => 
+    return devices.filter(d =>
       d.title.toLowerCase().includes(deviceSearchQuery.toLowerCase()) ||
       d.node_id.toLowerCase().includes(deviceSearchQuery.toLowerCase())
     );
@@ -56,6 +61,7 @@ const TemplateManagement = () => {
         name: `${template.name} (Copy)`,
         description: template.description,
         schema: template.schema,
+        type: template.type || "device",
       });
       toast.success("Template duplicated successfully!");
     } catch (err: any) {
@@ -83,7 +89,7 @@ const TemplateManagement = () => {
     const isDefault = template.is_default ?? (template.name === 'Default');
     if (isDefault) return;
     try {
-      await updateTemplate.mutateAsync({ id: template.id, is_default: true });
+      await updateTemplate.mutateAsync({ id: template.id, is_default: true, type: template.type });
       toast.success(`${template.name} is now the default template.`);
     } catch (err: any) {
       toast.error(err.message || "Failed to set default template");
@@ -97,16 +103,18 @@ const TemplateManagement = () => {
     }
     try {
       if (editTemplateData.id) {
-        await updateTemplate.mutateAsync({ 
-          id: editTemplateData.id, 
-          name: editTemplateData.name, 
-          description: editTemplateData.description 
+        await updateTemplate.mutateAsync({
+          id: editTemplateData.id,
+          name: editTemplateData.name,
+          description: editTemplateData.description,
+          type: editTemplateData.type
         });
         toast.success("Template updated successfully!");
       } else {
-        await createTemplate.mutateAsync({ 
-          name: editTemplateData.name, 
-          description: editTemplateData.description 
+        await createTemplate.mutateAsync({
+          name: editTemplateData.name,
+          description: editTemplateData.description,
+          type: editTemplateData.type
         });
         toast.success("Template created successfully!");
       }
@@ -129,16 +137,16 @@ const TemplateManagement = () => {
   };
 
   const handleToggleDevice = (deviceId: string) => {
-    setSelectedDeviceIds(prev => 
+    setSelectedDeviceIds(prev =>
       prev.includes(deviceId) ? prev.filter(id => id !== deviceId) : [...prev, deviceId]
     );
   };
 
   const handleBulkAssignConfirm = () => {
     // Check if any selected device has a DIFFERENT template currently assigned (overriding)
-    const overridingDevices = devices.filter(d => 
-      selectedDeviceIds.includes(d.id) && 
-      d.template_id && 
+    const overridingDevices = devices.filter(d =>
+      selectedDeviceIds.includes(d.id) &&
+      d.template_id &&
       d.template_id !== selectedTemplateForAssign?.id
     );
 
@@ -155,7 +163,7 @@ const TemplateManagement = () => {
       // Find devices to unassign (previously selected but now unchecked)
       const prevAssigned = devices.filter(d => d.template_id === selectedTemplateForAssign.id).map(d => d.id);
       const toUnassign = prevAssigned.filter(id => !selectedDeviceIds.includes(id));
-      
+
       // Unassign
       if (toUnassign.length > 0) {
         // assignTemplate with template_id: null (wait, the schema says REFERENCES ON DELETE SET NULL, 
@@ -185,129 +193,154 @@ const TemplateManagement = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard Canvas</h1>
             <p className="text-muted-foreground mt-2">
-              Create and manage dashboard templates to customize device views.
+              Create and manage dashboard templates to customize device and home views.
             </p>
           </div>
           <Button onClick={() => {
-            setEditTemplateData({ name: "", description: "" });
+            setEditTemplateData({ name: "", description: "", type: "device" });
             setIsCreateDialogOpen(true);
           }} className="gap-2">
             <Plus className="h-4 w-4" /> Create Template
           </Button>
         </div>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <LayoutTemplate className="h-5 w-5" />
-                  Templates
-                </CardTitle>
-                <CardDescription>View and manage all available dashboard templates.</CardDescription>
+        <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="w-full">
+          <TabsList className="grid w-80 grid-cols-2 mb-6">
+            <TabsTrigger value="device" className="flex items-center gap-2">
+              <Cpu className="h-4 w-4" /> Device Templates
+            </TabsTrigger>
+            <TabsTrigger value="home" className="flex items-center gap-2">
+              <LayoutTemplate className="h-4 w-4" /> Home Templates
+            </TabsTrigger>
+          </TabsList>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <LayoutTemplate className="h-5 w-5" />
+                    {activeTab === 'home' ? 'Home Dashboards' : 'Templates'}
+                  </CardTitle>
+                  <CardDescription>
+                    {activeTab === 'home'
+                      ? 'Create and manage global home dashboard layouts.'
+                      : 'View and manage all available device dashboard templates.'}
+                  </CardDescription>
+                </div>
+                <div className="relative w-64">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search templates..."
+                    className="pl-9"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
               </div>
-              <div className="relative w-64">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search templates..."
-                  className="pl-9"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {templatesLoading ? (
-              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-            ) : filteredTemplates.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">No templates found.</div>
-            ) : (
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Template Name</TableHead>
-                      <TableHead>Assigned Devices</TableHead>
-                      <TableHead>Created At</TableHead>
-                      <TableHead>Last Modified</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTemplates.map((template) => (
-                      <TableRow key={template.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{template.name}</span>
-                            {(template.is_default ?? (template.name === 'Default')) && (
-                              <Badge variant="default" className="text-xs">Default</Badge>
-                            )}
-                          </div>
-                          {template.description && (
-                            <p className="text-xs text-muted-foreground mt-1">{template.description}</p>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {(template.is_default ?? (template.name === 'Default')) ? (
-                            <Badge variant="secondary" className="gap-1 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
-                              <MonitorSmartphone className="h-3 w-3" />
-                              All Unassigned ({devices.filter(d => !d.template_id).length})
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="gap-1">
-                              <MonitorSmartphone className="h-3 w-3" />
-                              {template.devices?.[0]?.count || 0}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {format(new Date(template.created_at), "MMM d, yyyy")}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {format(new Date(template.updated_at), "MMM d, yyyy")}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {!(template.is_default ?? (template.name === 'Default')) && (
-                              <Button variant="ghost" size="sm" onClick={() => handleSetDefault(template)} title="Set as Default">
-                                <Star className="h-4 w-4" />
-                              </Button>
-                            )}
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => openAssignDialog(template)} 
-                              disabled={template.is_default ?? (template.name === 'Default')}
-                              title={template.is_default ?? (template.name === 'Default') ? "Default template is automatically assigned to all unassigned devices" : "Assign to Devices"}
-                            >
-                              <ArrowRight className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => navigate(`/builder?id=${template.id}`)} title="Preview / Edit Layout">
-                              <LayoutTemplate className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => {
-                              setEditTemplateData({ id: template.id, name: template.name, description: template.description || "" });
-                              setIsCreateDialogOpen(true);
-                            }} title="Edit Properties">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleDuplicate(template)} title="Duplicate">
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleDelete(template)} disabled={template.is_default ?? (template.name === 'Default')} className="text-destructive hover:text-destructive hover:bg-destructive/10" title="Delete">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+            </CardHeader>
+            <CardContent>
+              {templatesLoading ? (
+                <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+              ) : filteredTemplates.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">No templates found.</div>
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Template Name</TableHead>
+                        <TableHead>{activeTab === 'home' ? 'Status' : 'Assigned Devices'}</TableHead>
+                        <TableHead>Created At</TableHead>
+                        <TableHead>Last Modified</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTemplates.map((template) => (
+                        <TableRow key={template.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{template.name}</span>
+                              {(template.is_default ?? (template.name === 'Default')) && (
+                                <Badge variant="default" className="text-xs">Default</Badge>
+                              )}
+                            </div>
+                            {template.description && (
+                              <p className="text-xs text-muted-foreground mt-1">{template.description}</p>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {template.type === 'home' ? (
+                              template.is_default ? (
+                                <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600 text-white border-none">Active Home</Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">Draft</Badge>
+                              )
+                            ) : (
+                              (template.is_default ?? (template.name === 'Default')) ? (
+                                <Badge variant="secondary" className="gap-1 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
+                                  <Cpu className="h-3 w-3" />
+                                  All Unassigned ({devices.filter(d => !d.template_id).length})
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="gap-1">
+                                  <Cpu className="h-3 w-3" />
+                                  {template.devices?.[0]?.count || 0}
+                                </Badge>
+                              )
+                            )}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-sm">
+                            {format(new Date(template.created_at), "MMM d, yyyy")}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-sm">
+                            {format(new Date(template.updated_at), "MMM d, yyyy")}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {!(template.is_default ?? (template.name === 'Default')) && (
+                                <Button variant="ghost" size="sm" onClick={() => handleSetDefault(template)} title="Set as Default">
+                                  <Star className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {template.type !== 'home' && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openAssignDialog(template)}
+                                  disabled={template.is_default ?? (template.name === 'Default')}
+                                  title={template.is_default ?? (template.name === 'Default') ? "Default template is automatically assigned to all unassigned devices" : "Assign to Devices"}
+                                >
+                                  <ArrowRight className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="sm" onClick={() => navigate(`/builder?id=${template.id}`)} title="Preview / Edit Layout">
+                                <LayoutTemplate className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => {
+                                setEditTemplateData({ id: template.id, name: template.name, description: template.description || "", type: template.type || "device" });
+                                setIsCreateDialogOpen(true);
+                              }} title="Edit Properties">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => handleDuplicate(template)} title="Duplicate">
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => handleDelete(template)} disabled={template.is_default ?? (template.name === 'Default')} className="text-destructive hover:text-destructive hover:bg-destructive/10" title="Delete">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </Tabs>
 
         {/* Create/Edit Template Dialog */}
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -315,7 +348,7 @@ const TemplateManagement = () => {
             <DialogHeader>
               <DialogTitle>{editTemplateData.id ? "Edit Template" : "Create New Template"}</DialogTitle>
               <DialogDescription>
-                {editTemplateData.id ? "Update template details." : "Enter a name and description for your new template."}
+                {editTemplateData.id ? "Update template details." : "Enter a name, description and type for your new template."}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -326,6 +359,22 @@ const TemplateManagement = () => {
               <div className="space-y-2">
                 <Label htmlFor="description">Description (optional)</Label>
                 <Input id="description" value={editTemplateData.description} onChange={(e) => setEditTemplateData({ ...editTemplateData, description: e.target.value })} placeholder="e.g. Used for retail stores" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="type">Template Type</Label>
+                <Select
+                  value={editTemplateData.type}
+                  onValueChange={(val: 'device' | 'home') => setEditTemplateData({ ...editTemplateData, type: val })}
+                  disabled={!!editTemplateData.id}
+                >
+                  <SelectTrigger id="type">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="device">Device Dashboard</SelectItem>
+                    <SelectItem value="home">Home Dashboard</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter>
@@ -347,7 +396,7 @@ const TemplateManagement = () => {
                 Select devices to apply this template to.
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4 py-4">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -364,7 +413,7 @@ const TemplateManagement = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
-                        <Checkbox 
+                        <Checkbox
                           checked={filteredDevices.length > 0 && selectedDeviceIds.length === devices.length}
                           onCheckedChange={(checked) => {
                             if (checked) setSelectedDeviceIds(devices.map(d => d.id));
@@ -378,11 +427,11 @@ const TemplateManagement = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredDevices.map(device => {
-                      const currentTemplate = templates.find(t => t.id === device.template_id) || templates.find(t => t.is_default ?? (t.name === 'Default'));
+                      const currentTemplate = templates.find(t => t.id === device.template_id) || templates.find(t => (t.type === 'device' || !t.type) && (t.is_default ?? (t.name === 'Default')));
                       return (
                         <TableRow key={device.id}>
                           <TableCell>
-                            <Checkbox 
+                            <Checkbox
                               checked={selectedDeviceIds.includes(device.id)}
                               onCheckedChange={() => handleToggleDevice(device.id)}
                             />

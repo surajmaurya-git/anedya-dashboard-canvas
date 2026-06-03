@@ -41,6 +41,7 @@ function SectionGrid({ section, isOnly }: { section: Section; isOnly: boolean })
     addWidget,
     updateLayout,
     selectedWidgetId,
+    selectedSectionId,
     setSelectedWidget,
     setSelectedSection,
     removeWidget,
@@ -88,18 +89,29 @@ function SectionGrid({ section, isOnly }: { section: Section; isOnly: boolean })
     setIsEditingTitle(false);
   };
 
+  const isSelected = selectedSectionId === section.id;
+  const isHidden = section.hideHeader;
+
   return (
     <div
-      className="bg-card rounded-lg border border-border shadow-sm mb-8"
+      className={`rounded-lg transition-all mb-8 cursor-pointer ${
+        isSelected 
+          ? 'ring-2 ring-primary ring-offset-2 bg-card border border-primary' 
+          : isHidden 
+            ? 'border-2 border-dashed border-muted-foreground/30 bg-card/30 hover:border-muted-foreground/50' 
+            : 'border border-border bg-card shadow-sm hover:border-border/80'
+      }`}
       onClick={(e) => {
         e.stopPropagation();
         setSelectedSection(section.id);
       }}
     >
       {/* ── Section Header ── */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30 rounded-t-lg">
+      <div className={`flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30 rounded-t-lg ${
+        isHidden ? 'opacity-70 border-dashed bg-muted/10' : ''
+      }`}>
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <Activity className="w-5 h-5 text-primary shrink-0" />
+          <Activity className={`w-5 h-5 shrink-0 ${isHidden ? 'text-muted-foreground' : 'text-primary'}`} />
           {isEditingTitle ? (
             <input
               autoFocus
@@ -110,16 +122,24 @@ function SectionGrid({ section, isOnly }: { section: Section; isOnly: boolean })
               onKeyDown={(e) => { if (e.key === 'Enter') handleTitleSave(); }}
             />
           ) : (
-            <h3
-              className="text-[20px] font-semibold text-foreground truncate cursor-pointer hover:text-primary transition-colors"
-              onDoubleClick={() => {
-                setTitleDraft(section.title);
-                setIsEditingTitle(true);
-              }}
-              title="Double-click to rename"
-            >
-              {section.title}
-            </h3>
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <h3
+                className="text-[20px] font-semibold text-foreground truncate cursor-pointer hover:text-primary transition-colors"
+                onDoubleClick={() => {
+                  setTitleDraft(section.title);
+                  setIsEditingTitle(true);
+                }}
+                title="Double-click to rename"
+              >
+                {section.title}
+              </h3>
+              {isHidden && (
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded flex items-center gap-1 font-normal shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400"></span>
+                  Header & Border Hidden
+                </span>
+              )}
+            </div>
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0 ml-2">
@@ -296,7 +316,7 @@ export default function CanvasGrid({ onSave }: { onSave?: () => void }) {
   return (
     <div
       className="flex-1 bg-background overflow-y-auto h-full p-4"
-      onClick={() => { setSelectedWidget(null); }}
+      onClick={() => { setSelectedWidget(null); setSelectedSection(null); }}
     >
       <div className="w-full max-w-7xl mx-auto space-y-6">
         <DeviceBannerPreview />

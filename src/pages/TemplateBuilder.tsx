@@ -7,9 +7,10 @@ import { toast } from 'sonner';
 import { useBuilderStore } from '@/store/useBuilderStore';
 
 export default function TemplateBuilder() {
-  const { setTemplate } = useBuilderStore();
+  const { setTemplate, setTemplateType, reset, templateType } = useBuilderStore();
   const [searchParams] = useSearchParams();
   const templateId = searchParams.get('id');
+  const queryType = searchParams.get('type') as 'device' | 'home' | null;
 
   // Load existing template on mount
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function TemplateBuilder() {
             .from('dashboard_templates')
             .select('*')
             .eq('is_default', true)
+            .eq('type', queryType || 'device')
             .maybeSingle();
           
           data = defaultTpl;
@@ -39,25 +41,33 @@ export default function TemplateBuilder() {
               .from('dashboard_templates')
               .select('*')
               .eq('name', 'Default')
+              .eq('type', queryType || 'device')
               .maybeSingle();
             data = fallbackTpl;
           }
         }
 
-        if (data?.schema) {
-          const s = data.schema as any;
-          if (s.layout && s.widgets) {
-            // Support v1 (no sections) and v2 (with sections)
-            const sections = s.sections || [];
-            setTemplate(sections, s.layout, s.widgets);
+        if (data) {
+          setTemplateType(data.type || 'device');
+          if (data.schema) {
+            const s = data.schema as any;
+            if (s.layout && s.widgets) {
+              // Support v1 (no sections) and v2 (with sections)
+              const sections = s.sections || [];
+              setTemplate(sections, s.layout, s.widgets);
+            }
           }
+        } else {
+          reset();
+          setTemplateType(queryType || 'device');
         }
       } catch {
-        // No existing template yet — start fresh
+        reset();
+        setTemplateType(queryType || 'device');
       }
     };
     loadTemplate();
-  }, [setTemplate, templateId]);
+  }, [setTemplate, setTemplateType, reset, templateId, queryType]);
 
   // Auto-save template (upsert)
   const handleSaveTemplate = async (templateData: any) => {
@@ -74,6 +84,7 @@ export default function TemplateBuilder() {
           .from('dashboard_templates')
           .select('id')
           .eq('is_default', true)
+          .eq('type', templateType)
           .maybeSingle();
 
         // Fallback to name 'Default'
@@ -82,6 +93,7 @@ export default function TemplateBuilder() {
             .from('dashboard_templates')
             .select('id')
             .eq('name', 'Default')
+            .eq('type', templateType)
             .maybeSingle();
           defaultTpl = fallbackTpl;
         }
@@ -94,7 +106,7 @@ export default function TemplateBuilder() {
         } else {
           ({ error } = await supabase
             .from('dashboard_templates')
-            .insert({ name: 'Default', is_default: true, schema: templateData }));
+            .insert({ name: 'Default', is_default: true, schema: templateData, type: templateType }));
         }
       }
 
