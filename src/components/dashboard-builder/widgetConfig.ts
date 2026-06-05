@@ -26,6 +26,7 @@ export const WIDGET_SIZE_CONSTRAINTS: Record<string, WidgetSizeConfig> = {
   SparklineWidget: { minW: 1, minH: 1, maxW: 12, maxH: 12, defaultW: 2.5, defaultH: 1.5 },
   MapWidget: { minW: 4, minH: 3, maxW: 24, maxH: 24, defaultW: 6, defaultH: 4 },
   CameraViewerWidget: { minW: 4, minH: 3, maxW: 24, maxH: 24, defaultW: 6, defaultH: 4 },
+  DataTableWidget: { minW: 4, minH: 3, maxW: 24, maxH: 24, defaultW: 8, defaultH: 4 },
 };
 
 /** Returns constraints for a widget type, with safe fallback */

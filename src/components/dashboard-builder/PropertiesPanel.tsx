@@ -5,9 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Plus, X, Palette, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, X, Palette, ChevronDown, ChevronUp, GripVertical } from 'lucide-react';
 import type { ValueMapping } from './widgets/ValueDisplayWidget';
 import type { DonutSeries } from './widgets/DonutChartWidget';
+import type { DataTableVariableColumn } from './widgets/DataTableWidget';
 import { useDevices } from '@/hooks/useDevices';
 
 export default function PropertiesPanel() {
@@ -122,7 +123,7 @@ export default function PropertiesPanel() {
           />
         </div>
 
-        {templateType === 'home' && (
+        {templateType === 'home' && widget.type !== 'DataTableWidget' && (
           <div className="space-y-2">
             <Label>Target Device</Label>
             <Select
@@ -149,7 +150,7 @@ export default function PropertiesPanel() {
 
         {/* Global Variable / Key for legacy/simple widgets */}
         {/* Global Variable / Key for legacy/simple widgets */}
-        {!['ToggleSwitchWidget', 'SliderWidget', 'DonutChartWidget', 'CameraViewerWidget'].includes(widget.type) && (
+        {!['ToggleSwitchWidget', 'SliderWidget', 'DonutChartWidget', 'CameraViewerWidget', 'DataTableWidget'].includes(widget.type) && (
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Data Source</Label>
@@ -172,8 +173,8 @@ export default function PropertiesPanel() {
             </div>
             <div className="space-y-2">
               <Label>
-                { (draftConfig.dataSource === 'variable' || (['HistoricalTrendWidget', 'SparklineWidget', 'GaugeWidget', 'MapWidget', 'AgrrChartWidget', 'AggregateGoalWidget'].includes(widget.type) && !draftConfig.dataSource)) 
-                  ? 'Variable Identifier' : 'Key' }
+                {(draftConfig.dataSource === 'variable' || (['HistoricalTrendWidget', 'SparklineWidget', 'GaugeWidget', 'MapWidget', 'AgrrChartWidget', 'AggregateGoalWidget'].includes(widget.type) && !draftConfig.dataSource))
+                  ? 'Variable Identifier' : 'Key'}
               </Label>
               <Input
                 placeholder="e.g. temperature"
@@ -189,7 +190,7 @@ export default function PropertiesPanel() {
           <div className="space-y-4">
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground italic">
-                Connects to the camera on the device using WebRTC. 
+                Connects to the camera on the device using WebRTC.
                 Requires a device that supports the Anedya Video Streaming protocol.
               </p>
             </div>
@@ -203,7 +204,7 @@ export default function PropertiesPanel() {
               />
               <p className="text-[10px] text-muted-foreground">Default: 3478</p>
             </div>
-            
+
             <div className="space-y-3 pt-2 border-t text-sm">
               <Label>Display Options</Label>
               <div className="flex items-center gap-2">
@@ -607,7 +608,7 @@ export default function PropertiesPanel() {
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Unit symbol</Label>
@@ -1464,6 +1465,228 @@ export default function PropertiesPanel() {
             </div>
           </div>
         )}
+
+        {/* ───────────────────────── DataTableWidget ───────────────────────── */}
+        {widget.type === 'DataTableWidget' && (() => {
+          const vars: DataTableVariableColumn[] = draftConfig.variables ?? [];
+
+          const addVariable = () => {
+            const newVar: DataTableVariableColumn = {
+              id: `var-${Date.now()}`,
+              label: `Column ${vars.length + 1}`,
+              variableKey: '',
+              unit: '',
+              decimals: 2,
+              thresholdEnabled: false,
+            };
+            handleConfigChange({ variables: [...vars, newVar] });
+          };
+
+          const removeVariable = (id: string) => {
+            handleConfigChange({ variables: vars.filter((v) => v.id !== id) });
+          };
+
+          const updateVariable = (id: string, patch: Partial<DataTableVariableColumn>) => {
+            handleConfigChange({
+              variables: vars.map((v) => v.id === id ? { ...v, ...patch } : v),
+            });
+          };
+
+          return (
+            <div className="space-y-4">
+              {/* Page Size */}
+              <div className="space-y-2">
+                <Label>Rows per Page (Device Mode)</Label>
+                <Select
+                  value={String(draftConfig.pageSize ?? 20)}
+                  onValueChange={(v) => handleConfigChange({ pageSize: Number(v) })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[10, 20, 50, 100].map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n} rows</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Device Selection (Home mode only) */}
+              {templateType === 'home' && (
+                <div className="space-y-2 border-t pt-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Devices to Display</Label>
+                    <span className="text-[10px] text-muted-foreground">
+                      {(draftConfig.selectedNodeIds?.length ?? 0) === 0
+                        ? 'All devices'
+                        : `${draftConfig.selectedNodeIds.length} selected`}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Check devices to include. Leave all unchecked to show all.
+                  </p>
+                  <div className="space-y-1 max-h-40 overflow-y-auto border rounded-md p-2 bg-muted/5">
+                    {devices.map((d) => {
+                      const selected: string[] = draftConfig.selectedNodeIds ?? [];
+                      const checked = selected.includes(d.node_id);
+                      const toggle = () => {
+                        const next = checked
+                          ? selected.filter((id) => id !== d.node_id)
+                          : [...selected, d.node_id];
+                        handleConfigChange({ selectedNodeIds: next });
+                      };
+                      return (
+                        <label
+                          key={d.id}
+                          className="flex items-center gap-2 cursor-pointer py-1 px-1 rounded hover:bg-muted/30 transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            className="w-3.5 h-3.5 rounded border-input text-primary cursor-pointer"
+                            checked={checked}
+                            onChange={toggle}
+                          />
+                          <span className="text-xs truncate">{d.title || d.node_id}</span>
+                        </label>
+                      );
+                    })}
+                    {devices.length === 0 && (
+                      <p className="text-[10px] text-muted-foreground italic text-center py-2">No devices found</p>
+                    )}
+                  </div>
+                  {(draftConfig.selectedNodeIds?.length ?? 0) > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 text-xs w-full text-muted-foreground"
+                      onClick={() => handleConfigChange({ selectedNodeIds: [] })}
+                    >
+                      Clear selection (show all)
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {/* Variable Columns */}
+              <div className="space-y-2 border-t pt-3">
+                <div className="flex items-center justify-between">
+                  <Label>Variable Columns</Label>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addVariable}>
+                    <Plus className="h-3 w-3" /> Add Column
+                  </Button>
+                </div>
+
+                {vars.length === 0 && (
+                  <p className="text-xs text-muted-foreground italic text-center py-3">
+                    No columns yet. Add a variable column above.
+                  </p>
+                )}
+
+                <div className="space-y-3">
+                  {vars.map((col, idx) => (
+                    <div key={col.id} className="border rounded-md p-3 space-y-2 bg-muted/10">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-muted-foreground">Col {idx + 1}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5 text-destructive/60 hover:text-destructive"
+                          onClick={() => removeVariable(col.id)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Label</Label>
+                          <Input
+                            className="h-7 text-xs"
+                            value={col.label}
+                            placeholder="e.g. Temperature"
+                            onChange={(e) => updateVariable(col.id, { label: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Variable Key</Label>
+                          <Input
+                            className="h-7 text-xs"
+                            value={col.variableKey}
+                            placeholder="e.g. temperature"
+                            onChange={(e) => updateVariable(col.id, { variableKey: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Unit</Label>
+                          <Input
+                            className="h-7 text-xs"
+                            value={col.unit ?? ''}
+                            placeholder="e.g. °C"
+                            onChange={(e) => updateVariable(col.id, { unit: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Decimals</Label>
+                          <Input
+                            type="number"
+                            className="h-7 text-xs"
+                            value={col.decimals ?? 2}
+                            min={0}
+                            max={6}
+                            onChange={(e) => updateVariable(col.id, { decimals: Number(e.target.value) })}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Threshold */}
+                      <div className="flex items-center justify-between pt-1">
+                        <Label className="text-xs font-normal">Enable Threshold Colors</Label>
+                        <Switch
+                          checked={col.thresholdEnabled === true}
+                          onCheckedChange={(v) => updateVariable(col.id, { thresholdEnabled: v })}
+                        />
+                      </div>
+
+                      {col.thresholdEnabled && (
+                        <div className="grid grid-cols-3 gap-2 pt-1">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] text-blue-500">≤ Min (blue)</Label>
+                            <Input
+                              type="number"
+                              className="h-7 text-xs"
+                              value={col.thresholdMin ?? ''}
+                              placeholder="—"
+                              onChange={(e) => updateVariable(col.id, { thresholdMin: e.target.value ? Number(e.target.value) : undefined })}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] text-amber-500">≥ Warn (amber)</Label>
+                            <Input
+                              type="number"
+                              className="h-7 text-xs"
+                              value={col.thresholdWarning ?? ''}
+                              placeholder="—"
+                              onChange={(e) => updateVariable(col.id, { thresholdWarning: e.target.value ? Number(e.target.value) : undefined })}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] text-red-500">≥ Danger (red)</Label>
+                            <Input
+                              type="number"
+                              className="h-7 text-xs"
+                              value={col.thresholdDanger ?? ''}
+                              placeholder="—"
+                              onChange={(e) => updateVariable(col.id, { thresholdDanger: e.target.value ? Number(e.target.value) : undefined })}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
       </div>
     </div>
