@@ -319,6 +319,13 @@ export default function CameraViewerWidget({ config, nodeId, isEditMode }: Camer
   }, [stopStream]);
 
   useEffect(() => {
+    if (!isEditMode && config?.config?.autoStart === true && status === 'ready') {
+      startStream();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodeId, isEditMode]);
+
+  useEffect(() => {
     const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', onFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
