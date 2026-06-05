@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Gauge, LineChart, Hash, Settings, PieChart, ToggleRight, Battery, SlidersHorizontal, Cylinder, Activity, Map as MapIcon, Video, BarChart2, Target } from 'lucide-react';
+import { Gauge, LineChart, Hash, Settings, PieChart, ToggleRight, Battery, SlidersHorizontal, Cylinder, Activity, Map as MapIcon, Video, BarChart2, Target, Table } from 'lucide-react';
 import { useBuilderStore } from '../../store/useBuilderStore';
 import { WIDGET_SIZE_CONSTRAINTS } from './widgetConfig';
 
@@ -19,6 +19,7 @@ const WIDGET_TYPES = [
   { id: 'SparklineWidget',    name: 'Sparkline Trend',       icon: <Activity size={18} /> },
   { id: 'MapWidget',          name: 'Map',                   icon: <MapIcon size={18} /> },
   { id: 'CameraViewerWidget', name: 'Camera Viewer',         icon: <Video size={18} /> },
+  { id: 'DataTableWidget',    name: 'Data Table',            icon: <Table size={18} /> },
 ];
 
 export default function ComponentSidebar() {

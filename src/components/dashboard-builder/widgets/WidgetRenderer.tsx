@@ -15,6 +15,7 @@ import { TankWidget } from './TankWidget';
 import { SparklineWidget } from './SparklineWidget';
 import { MapWidget } from './MapWidget';
 import CameraViewerWidget from './CameraViewerWidget';
+import { DataTableWidget } from './DataTableWidget';
 import { useWidgetData } from '@/hooks/useWidgetData';
 import { AlertTriangle, HelpCircle, FileQuestion } from 'lucide-react';
 
@@ -197,6 +198,15 @@ export default function WidgetRenderer(props: WidgetRendererProps) {
         <CameraViewerWidget
           config={config}
           nodeId={resolvedNodeId}
+          isEditMode={isEditMode}
+        />
+      );
+    case 'DataTableWidget':
+      return (
+        <DataTableWidget
+          config={config}
+          nodeId={nodeId}
+          pollIntervalMs={pollIntervalMs}
           isEditMode={isEditMode}
         />
       );
