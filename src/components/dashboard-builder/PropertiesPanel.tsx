@@ -236,6 +236,16 @@ export default function PropertiesPanel() {
                 />
                 <Label htmlFor="showNetworkStatsBtn" className="font-normal cursor-pointer text-sm">Show Network Stats Button</Label>
               </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="autoStart"
+                  className="w-4 h-4 rounded border-input text-primary focus:ring-primary cursor-pointer"
+                  checked={draftConfig.autoStart === true}
+                  onChange={(e) => handleConfigChange({ autoStart: e.target.checked })}
+                />
+                <Label htmlFor="autoStart" className="font-normal cursor-pointer text-sm">Auto Start Stream on Open</Label>
+              </div>
             </div>
           </div>
         )}

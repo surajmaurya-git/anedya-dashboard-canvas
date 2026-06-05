@@ -45,7 +45,7 @@ export default function CameraViewerWidget({ config, nodeId, isEditMode }: Camer
   const [connectionProgress, setConnectionProgress] = useState('CONNECTING...');
 
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showStats, setShowStats] = useState(true);
+  const [showStats, setShowStats] = useState(false);
   const [networkStats, setNetworkStats] = useState({ bitrate: 0, fps: 0, packetLoss: 0, resolution: '' });
   const lastBytesReceived = useRef(0);
   const lastTimestamp = useRef(0);
@@ -317,6 +317,13 @@ export default function CameraViewerWidget({ config, nodeId, isEditMode }: Camer
       stopStream();
     };
   }, [stopStream]);
+
+  useEffect(() => {
+    if (!isEditMode && config?.config?.autoStart === true && status === 'ready') {
+      startStream();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodeId, isEditMode]);
 
   useEffect(() => {
     const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
