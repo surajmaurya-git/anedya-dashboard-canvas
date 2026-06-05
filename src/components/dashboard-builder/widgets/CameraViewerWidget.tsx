@@ -45,7 +45,7 @@ export default function CameraViewerWidget({ config, nodeId, isEditMode }: Camer
   const [connectionProgress, setConnectionProgress] = useState('CONNECTING...');
 
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showStats, setShowStats] = useState(true);
+  const [showStats, setShowStats] = useState(false);
   const [networkStats, setNetworkStats] = useState({ bitrate: 0, fps: 0, packetLoss: 0, resolution: '' });
   const lastBytesReceived = useRef(0);
   const lastTimestamp = useRef(0);
