@@ -252,7 +252,7 @@ export default function CameraViewerWidget({ config, nodeId, isEditMode }: Camer
         };
       });
 
-      if (pc.localDescription?.sdp && !pc.localDescription.sdp.includes('typ relay')) {
+      if (forceRelay && pc.localDescription?.sdp && !pc.localDescription.sdp.includes('typ relay')) {
         setErrorMessage('Failed to create relay candidate. Please check your quota limits.');
         setStatus('error');
         stopStream(true);
@@ -290,7 +290,7 @@ export default function CameraViewerWidget({ config, nodeId, isEditMode }: Camer
             if (pollTimerRef.current) clearInterval(pollTimerRef.current);
             const answerSdp = JSON.parse(value);
 
-            if (answerSdp.sdp && !answerSdp.sdp.includes('typ relay')) {
+            if (forceRelay && answerSdp.sdp && !answerSdp.sdp.includes('typ relay')) {
               setErrorMessage('Failed to create relay candidate. Please check your quota limits.');
               setStatus('error');
               stopStream(true);
