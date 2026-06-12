@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useRef, useCallback, useEffect } from 'react';
 import { WidgetConfig } from '@/store/useBuilderStore';
 import { useDevices } from '@/hooks/useDevices';
 import { useMultiNodeLatestData } from '@/hooks/useMultiNodeLatestData';
 import { useDeviceHistoricalData } from '@/hooks/useDeviceHistoricalData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, AlertTriangle, Table2, RefreshCw, Clock, Layers } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertTriangle, Table2, RefreshCw, Clock, Layers, Download, ArrowDownToLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -63,6 +63,20 @@ function formatTimestamp(ts: number): string {
   });
 }
 
+function downloadCsv(filename: string, csvData: string) {
+  const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+}
+
 // ─── Shared Table Header ──────────────────────────────────────────────────────
 
 function TableHeader({ firstColLabel, variables }: {
@@ -90,9 +104,9 @@ function TableHeader({ firstColLabel, variables }: {
 
 // ─── Home Mode ───────────────────────────────────────────────────────────────
 
-interface HomeTableProps { cfg: DataTableWidgetConfig; pollIntervalMs?: number; }
+interface HomeTableProps { cfg: DataTableWidgetConfig; pollIntervalMs?: number; exportRef: React.MutableRefObject<(() => void) | null>; }
 
-function HomeDataTable({ cfg, pollIntervalMs }: HomeTableProps) {
+function HomeDataTable({ cfg, pollIntervalMs, exportRef }: HomeTableProps) {
   const { data: allDevices = [], isLoading: devicesLoading } = useDevices();
   const variables = cfg.variables ?? [];
 
@@ -108,6 +122,25 @@ function HomeDataTable({ cfg, pollIntervalMs }: HomeTableProps) {
   const col4 = useMultiNodeLatestData(nodeIds, variables[4]?.variableKey, pollIntervalMs);
   const col5 = useMultiNodeLatestData(nodeIds, variables[5]?.variableKey, pollIntervalMs);
   const colDataArr = [col0, col1, col2, col3, col4, col5];
+
+  const handleExport = useCallback(() => {
+    const header = ['Device', ...variables.map(v => `"${v.label}${v.unit ? ` (${v.unit})` : ''}"`)].join(',');
+    const csvRows = devices.map(device => {
+      const row = [`"${(device.title || device.node_id).replace(/"/g, '""')}"`];
+      variables.forEach((col, colIdx) => {
+        const val = colDataArr[colIdx]?.data?.[device.node_id]?.value;
+        row.push(val === null || val === undefined ? '' : String(val));
+      });
+      return row.join(',');
+    });
+    const csvData = [header, ...csvRows].join('\n');
+    downloadCsv(`latest_data_${new Date().getTime()}.csv`, csvData);
+  }, [devices, variables, colDataArr]);
+
+  useEffect(() => {
+    exportRef.current = handleExport;
+    return () => { exportRef.current = null; };
+  }, [exportRef, handleExport]);
 
   const isRefreshing = colDataArr.slice(0, variables.length).some(c => c.isLoading);
 
@@ -179,14 +212,34 @@ function HomeDataTable({ cfg, pollIntervalMs }: HomeTableProps) {
 
 // ─── Device Mode ─────────────────────────────────────────────────────────────
 
-interface DeviceTableProps { cfg: DataTableWidgetConfig; nodeId: string; pollIntervalMs?: number; }
+interface DeviceTableProps { cfg: DataTableWidgetConfig; nodeId: string; pollIntervalMs?: number; exportRef: React.MutableRefObject<(() => void) | null>; }
 
-function DeviceDataTable({ cfg, nodeId, pollIntervalMs }: DeviceTableProps) {
+function DeviceDataTable({ cfg, nodeId, pollIntervalMs, exportRef }: DeviceTableProps) {
   const variables = cfg.variables ?? [];
   const pageSize = cfg.pageSize ?? 20;
 
   const { rows, isLoading, error, page, totalPages, hasNext, hasPrev, goNext, goPrev } =
     useDeviceHistoricalData({ nodeId, variables, pageSize, pollIntervalMs });
+
+  const handleExport = useCallback(() => {
+    const header = ['Timestamp', ...variables.map(v => `"${v.label}${v.unit ? ` (${v.unit})` : ''}"`)].join(',');
+    const csvRows = rows.map(row => {
+      const ts = formatTimestamp(row.timestamp);
+      const csvRow = [`"${ts}"`];
+      variables.forEach(col => {
+        const val = row.values[col.variableKey];
+        csvRow.push(val === null || val === undefined ? '' : String(val));
+      });
+      return csvRow.join(',');
+    });
+    const csvData = [header, ...csvRows].join('\n');
+    downloadCsv(`historical_data_${new Date().getTime()}.csv`, csvData);
+  }, [rows, variables]);
+
+  useEffect(() => {
+    exportRef.current = handleExport;
+    return () => { exportRef.current = null; };
+  }, [exportRef, handleExport]);
 
   if (variables.length === 0) {
     return (
@@ -286,15 +339,42 @@ export function DataTableWidget({ config, nodeId, pollIntervalMs, isEditMode }: 
   const mode: 'home' | 'device' = nodeId ? 'device' : 'home';
   const effectivePollMs = isEditMode ? 0 : (pollIntervalMs ?? cfg.refreshIntervalMs ?? 0);
 
+  const exportRef = useRef<(() => void) | null>(null);
+
   const headerContent = (
     <div className="px-4 py-2.5 border-b border-border/60 flex items-center gap-2.5 flex-none bg-muted/20">
       <div className="flex items-center justify-center w-6 h-6 rounded bg-primary/10 flex-none">
         <Table2 className="h-3.5 w-3.5 text-primary/70" />
       </div>
-      <span className="text-sm font-semibold truncate text-foreground/90">
+      <span className="text-sm font-semibold truncate text-foreground/90 flex-1">
         {config.title || 'Data Table'}
       </span>
-
+      {!isEditMode && (
+        <div className="ml-auto flex items-center gap-2">
+          {mode === 'home' ? (
+            <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              live
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-[10px] font-medium text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+              <Clock className="h-2.5 w-2.5" />
+              historical
+            </span>
+          )}
+          <div className="w-px h-4 bg-border/60 mx-1" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => exportRef.current?.()}
+            className="gap-2 h-8"
+            title="Export Data as CSV"
+          >
+            <ArrowDownToLine className="h-3 w-3" />
+            Export
+          </Button>
+        </div>
+      )}
     </div>
   );
 
@@ -333,8 +413,8 @@ export function DataTableWidget({ config, nodeId, pollIntervalMs, isEditMode }: 
       {headerContent}
       <div className="flex-1 overflow-hidden">
         {mode === 'home'
-          ? <HomeDataTable cfg={cfg} pollIntervalMs={effectivePollMs} />
-          : <DeviceDataTable cfg={cfg} nodeId={nodeId!} pollIntervalMs={effectivePollMs} />
+          ? <HomeDataTable cfg={cfg} pollIntervalMs={effectivePollMs} exportRef={exportRef} />
+          : <DeviceDataTable cfg={cfg} nodeId={nodeId!} pollIntervalMs={effectivePollMs} exportRef={exportRef} />
         }
       </div>
     </div>
