@@ -52,6 +52,15 @@ export function ValueStoreWidget({ config, nodeId, pollIntervalMs, isEditMode }:
   const [inputValue, setInputValue] = useState('');
   const unit = config.config.unit || '';
 
+  // Fetch limits dynamically if configured
+  const isMinDynamic = config.config.minLimitSource === 'valuestore';
+  const isMaxDynamic = config.config.maxLimitSource === 'valuestore';
+  const minLimitVs = useValueStoreData(nodeId, isMinDynamic ? config.config.minVsKey : undefined, pollIntervalMs);
+  const maxLimitVs = useValueStoreData(nodeId, isMaxDynamic ? config.config.maxVsKey : undefined, pollIntervalMs);
+
+  const minLimit = isMinDynamic ? (typeof minLimitVs.value === 'number' ? minLimitVs.value : undefined) : config.config.min;
+  const maxLimit = isMaxDynamic ? (typeof maxLimitVs.value === 'number' ? maxLimitVs.value : undefined) : config.config.max;
+
   // Sync input when fetched value changes
   useEffect(() => {
     if (activeValue !== null && activeValue !== undefined) {
@@ -59,9 +68,18 @@ export function ValueStoreWidget({ config, nodeId, pollIntervalMs, isEditMode }:
     }
   }, [activeValue]);
 
+  const isOutOfLimits = () => {
+    if (config.config.dataType !== 'float') return false;
+    const numVal = Number(inputValue);
+    if (isNaN(numVal)) return true;
+    if (minLimit !== undefined && numVal < minLimit) return true;
+    if (maxLimit !== undefined && numVal > maxLimit) return true;
+    return false;
+  };
+
   const handleSet = async () => {
-    if (!vsKey || isEditMode || !canWrite) return;
-    await vs.setValue(inputValue);
+    if (!vsKey || isEditMode || !canWrite || isOutOfLimits()) return;
+    await vs.setValue(inputValue, config.config.dataType as 'string' | 'float' | 'boolean');
   };
 
   const formatTimestamp = (ts: number | null) => {
@@ -122,30 +140,40 @@ export function ValueStoreWidget({ config, nodeId, pollIntervalMs, isEditMode }:
         ) : (
           /* ── Live State ── */
           <div className="flex flex-col gap-3 flex-1 justify-center">
-            <div className="flex gap-2 items-center">
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                className="h-9 text-sm flex-1"
-                placeholder="Enter value..."
-                readOnly={!canWrite}
-              />
-              {unit && (
-                <span className="text-xs text-muted-foreground shrink-0 font-medium">{unit}</span>
-              )}
-              <Button
-                size="sm"
-                className="h-9 px-4"
-                onClick={handleSet}
-                disabled={vs.isSetting || !canWrite}
-                title={!canWrite ? (dataSource !== 'valuestore' ? 'Set is only available with ValueStore source' : 'Viewers cannot set values') : ''}
-              >
-                {vs.isSetting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  'Set'
+            <div className="flex flex-col gap-1">
+              <div className="flex gap-2 items-center">
+                <Input
+                  type={config.config.dataType === 'float' ? 'number' : 'text'}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  className="h-9 text-sm flex-1"
+                  placeholder="Enter value..."
+                  readOnly={!canWrite}
+                  min={config.config.dataType === 'float' ? minLimit : undefined}
+                  max={config.config.dataType === 'float' ? maxLimit : undefined}
+                />
+                {unit && (
+                  <span className="text-xs text-muted-foreground shrink-0 font-medium">{unit}</span>
                 )}
-              </Button>
+                <Button
+                  size="sm"
+                  className="h-9 px-4"
+                  onClick={handleSet}
+                  disabled={vs.isSetting || !canWrite || isOutOfLimits()}
+                  title={!canWrite ? (dataSource !== 'valuestore' ? 'Set is only available with ValueStore source' : 'Viewers cannot set values') : isOutOfLimits() ? 'Value is out of limits' : ''}
+                >
+                  {vs.isSetting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    'Set'
+                  )}
+                </Button>
+              </div>
+              {config.config.dataType === 'float' && (minLimit !== undefined || maxLimit !== undefined) && (
+                <span className="text-[10px] text-muted-foreground px-1">
+                  Limit: {minLimit !== undefined ? minLimit : '-∞'} to {maxLimit !== undefined ? maxLimit : '∞'}
+                </span>
+              )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
               {dataSource === 'valuestore' ? (
