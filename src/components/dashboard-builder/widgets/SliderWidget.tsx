@@ -18,8 +18,20 @@ export function SliderWidget({ config, nodeId, pollIntervalMs, isEditMode }: Sli
   const canWrite = role !== 'viewer';
 
   const key = config.config.deviceKey || '';
-  const min = config.config.min ?? 0;
-  const max = config.config.max ?? 100;
+  const isMinDynamic = config.config.minLimitSource === 'valuestore';
+  const isMaxDynamic = config.config.maxLimitSource === 'valuestore';
+  
+  const minLimitVs = useValueStoreData(nodeId, isMinDynamic ? config.config.minVsKey : undefined, pollIntervalMs);
+  const maxLimitVs = useValueStoreData(nodeId, isMaxDynamic ? config.config.maxVsKey : undefined, pollIntervalMs);
+
+  const min = isMinDynamic 
+    ? (typeof minLimitVs.value === 'number' ? minLimitVs.value : config.config.min ?? 0) 
+    : config.config.min ?? 0;
+    
+  const max = isMaxDynamic 
+    ? (typeof maxLimitVs.value === 'number' ? maxLimitVs.value : config.config.max ?? 100) 
+    : config.config.max ?? 100;
+    
   const step = config.config.step ?? 1;
   const unit = config.config.unit || '';
   const color = config.config.color || '#0ea5e9';

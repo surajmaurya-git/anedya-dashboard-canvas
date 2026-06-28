@@ -830,9 +830,100 @@ export default function PropertiesPanel() {
                   : 'Read-only from Anedya Variables (Set disabled)'}
               </p>
             </div>
+
+            <div className="space-y-2">
+              <Label>Data Type</Label>
+              <Select
+                value={draftConfig.dataType || 'string'}
+                onValueChange={(val) => handleConfigChange({ dataType: val })}
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue placeholder="String" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="string">String</SelectItem>
+                  <SelectItem value="boolean">Boolean</SelectItem>
+                  <SelectItem value="float">Float</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {draftConfig.dataType === 'float' && (
+              <div className="space-y-4 border-l-2 border-primary/20 pl-3">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Min Limit Source</Label>
+                    <Select
+                      value={draftConfig.minLimitSource || 'static'}
+                      onValueChange={(val) => handleConfigChange({ minLimitSource: val })}
+                    >
+                      <SelectTrigger className="h-7 w-[120px] text-xs">
+                        <SelectValue placeholder="Static" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="static">Static Value</SelectItem>
+                        <SelectItem value="valuestore">ValueStore</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {draftConfig.minLimitSource === 'valuestore' ? (
+                    <Input
+                      className="h-8"
+                      placeholder="Key"
+                      value={draftConfig.minVsKey ?? ''}
+                      onChange={(e) => handleConfigChange({ minVsKey: e.target.value })}
+                    />
+                  ) : (
+                    <Input
+                      type="number"
+                      className="h-8"
+                      placeholder="No min limit"
+                      value={draftConfig.min ?? ''}
+                      onChange={(e) => handleConfigChange({ min: e.target.value ? Number(e.target.value) : undefined })}
+                    />
+                  )}
+                </div>
+
+                <div className="space-y-3 pt-2 border-t border-border/50">
+                  <div className="flex items-center justify-between">
+                    <Label>Max Limit Source</Label>
+                    <Select
+                      value={draftConfig.maxLimitSource || 'static'}
+                      onValueChange={(val) => handleConfigChange({ maxLimitSource: val })}
+                    >
+                      <SelectTrigger className="h-7 w-[120px] text-xs">
+                        <SelectValue placeholder="Static" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="static">Static Value</SelectItem>
+                        <SelectItem value="valuestore">ValueStore</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {draftConfig.maxLimitSource === 'valuestore' ? (
+                    <Input
+                      className="h-8"
+                      placeholder="Key"
+                      value={draftConfig.maxVsKey ?? ''}
+                      onChange={(e) => handleConfigChange({ maxVsKey: e.target.value })}
+                    />
+                  ) : (
+                    <Input
+                      type="number"
+                      className="h-8"
+                      placeholder="No max limit"
+                      value={draftConfig.max ?? ''}
+                      onChange={(e) => handleConfigChange({ max: e.target.value ? Number(e.target.value) : undefined })}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Unit symbol</Label>
               <Input
+                className="h-8"
                 placeholder="e.g. °C, seconds"
                 value={draftConfig.unit || ''}
                 onChange={(e) => handleConfigChange({ unit: e.target.value })}
@@ -1300,30 +1391,77 @@ export default function PropertiesPanel() {
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Min</Label>
-                <Input
-                  type="number"
-                  className="h-8 text-xs"
-                  placeholder="0"
-                  value={draftConfig.min ?? '0'}
-                  onChange={(e) => handleConfigChange({
-                    min: e.target.value === '' ? undefined : Number(e.target.value)
-                  })}
-                />
+            <div className="space-y-4 border-l-2 border-primary/20 pl-3">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Min Limit Source</Label>
+                  <Select
+                    value={draftConfig.minLimitSource || 'static'}
+                    onValueChange={(val) => handleConfigChange({ minLimitSource: val })}
+                  >
+                    <SelectTrigger className="h-7 w-[120px] text-xs">
+                      <SelectValue placeholder="Static" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="static">Static Value</SelectItem>
+                      <SelectItem value="valuestore">ValueStore</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {draftConfig.minLimitSource === 'valuestore' ? (
+                  <Input
+                    className="h-8 text-xs"
+                    placeholder="VS Key for Min Limit (e.g. min_temp)"
+                    value={draftConfig.minVsKey ?? ''}
+                    onChange={(e) => handleConfigChange({ minVsKey: e.target.value })}
+                  />
+                ) : (
+                  <Input
+                    type="number"
+                    className="h-8 text-xs"
+                    placeholder="0"
+                    value={draftConfig.min ?? '0'}
+                    onChange={(e) => handleConfigChange({
+                      min: e.target.value === '' ? undefined : Number(e.target.value)
+                    })}
+                  />
+                )}
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Max</Label>
-                <Input
-                  type="number"
-                  className="h-8 text-xs"
-                  placeholder="100"
-                  value={draftConfig.max ?? '100'}
-                  onChange={(e) => handleConfigChange({
-                    max: e.target.value === '' ? undefined : Number(e.target.value)
-                  })}
-                />
+
+              <div className="space-y-3 pt-2 border-t border-border/50">
+                <div className="flex items-center justify-between">
+                  <Label>Max Limit Source</Label>
+                  <Select
+                    value={draftConfig.maxLimitSource || 'static'}
+                    onValueChange={(val) => handleConfigChange({ maxLimitSource: val })}
+                  >
+                    <SelectTrigger className="h-7 w-[120px] text-xs">
+                      <SelectValue placeholder="Static" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="static">Static Value</SelectItem>
+                      <SelectItem value="valuestore">ValueStore</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {draftConfig.maxLimitSource === 'valuestore' ? (
+                  <Input
+                    className="h-8 text-xs"
+                    placeholder="VS Key for Max Limit (e.g. max_temp)"
+                    value={draftConfig.maxVsKey ?? ''}
+                    onChange={(e) => handleConfigChange({ maxVsKey: e.target.value })}
+                  />
+                ) : (
+                  <Input
+                    type="number"
+                    className="h-8 text-xs"
+                    placeholder="100"
+                    value={draftConfig.max ?? '100'}
+                    onChange={(e) => handleConfigChange({
+                      max: e.target.value === '' ? undefined : Number(e.target.value)
+                    })}
+                  />
+                )}
               </div>
             </div>
 
