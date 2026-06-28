@@ -52,8 +52,8 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-3 px-2 py-4 border-b border-border">
-        <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shrink-0">
-          <span className="text-primary-foreground font-bold">IoT</span>
+        <div className="w-10 h-10 flex items-center justify-center shrink-0">
+          <img src="/favicon.png" alt="Logo" className="w-full h-full object-contain drop-shadow-[0_0_10px_rgba(14,165,233,0.3)]" />
         </div>
         <div className="min-w-0">
           <h2 className="font-semibold truncate">{import.meta.env.VITE_APP_NAME || "Anedya Dashboard Canvas"}</h2>
