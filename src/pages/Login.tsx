@@ -155,8 +155,8 @@ const Login: React.FC = () => {
 
       <div className="relative w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4 shadow-lg shadow-primary/20">
-            <Cpu className="h-8 w-8" />
+          <div className="inline-flex items-center justify-center w-20 h-20 mb-4">
+            <img src="/favicon.png" alt="Logo" className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(14,165,233,0.5)]" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight">
             {import.meta.env.VITE_APP_NAME || "Anedya Dashboard Canvas"}
